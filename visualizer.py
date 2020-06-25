@@ -26,11 +26,12 @@ from blinkstick import blinkstick
 import notes_scaled_nosaturation
 from time import sleep, time
 from colorsys import hsv_to_rgb
-import argparse, sys
+import argparse, sys, random
+from threading import Thread
 
 
 class BlinkStickViz:
-    def __init__(self, modes, device=None, sensitivity, rate, chunk):
+    def __init__(self, sensitivity, rate, chunk, device=None):
         # Declare variables, not war.
                 
         # PyAudio Variables.
@@ -41,22 +42,22 @@ class BlinkStickViz:
         self.rate = rate # This may need to be tuned to 48000Hz
         self.chunk = chunk # This may need to be tunend to 512, 2048, or 4096.
         
-        # Visualization Variables.
-        self.loop = True # Whether or not to pulse from both ends of the strip. If you have a lot of LEDs (more than 8-16) I'd recommend having this on.
-        self.sensitivity = sensitivity # Sensitivity to sound.
-        self.flash = False
-        self.pulse = True
+        # Visualization Variables.        
+        self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.        
+        self.sensitivity = sensitivity # Sensitivity to sound.                
         self.sample_rate = 1024 # Haven't seen this tuned. But perhaps?
+        self.running = False
+        self.interval = None
         
         # Init Blinkstick and Audio pickup. Create leds object that we can loop over in the visualization methods.
-        self.stick = blinkstick.find_first()
-        self.count = self.stick.get_led_count()
-        self.audio_stream = self.microphone_input() # Init microphone as input source/stream.
-        self.audio = self.read_audio(self.audio_stream, num_samples=self.samples) # Read the audio stream.
+        self.stick = blinkstick.find_first() # Discover Blinkstick Device.
+        self.count = self.stick.get_led_count() # Determine the LED count by querying the stick.
+        self.audio_stream = self.input_device() # Init microphone as input source/stream.
+        self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
         self.leds = notes_scaled_nosaturation.process(self.audio, num_leds=self.count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity) # Pass the Audio Stream to be processed. 
 
 
-    def microphone_input(self):
+    def input_device(self): # i.e. Microphone
         if self.device is not None: # Use non-default device.                   
             audio_stream = self.paud.open(
                 format=self.format,
@@ -93,12 +94,36 @@ class BlinkStickViz:
         self.stick.set_led_data(0, strip)
 
 
-    def visulziation_handler(self):
-
-        if self.pulse:
-
-        elif self.flash:
-
+    def main(self, modes):
+        print(modes)
+        visualizations = [self.pulse_visualization, self.flash_visualization]
+        #loop = [self.loop = True, self.loop = False]
+        
+        # Always start with the more complex conditional and move to simplest.
+        if 'pulse' in modes and 'loop' in modes:
+            print('pulse and loop')
+            self.loop = True
+            self.pulse_visualization()
+        elif 'pulse' in modes and 'flash' in modes:
+            print('pulse and flash')
+            self.interval = random.randint(1,5)
+            
+            while True:
+                print('sleeping {}'.format(self.interval))
+                t = Thread(target=self.pulse_visualization, daemon=True)
+                t.start()
+                sleep(self.interval)
+                t.do_run = False
+                t.join()               
+                self.interval = random.randint(1,5)
+                
+        elif 'pulse' in modes:
+            print('pulse only')
+            self.pulse_visualization()
+        elif 'flash' in modes: # Note: flash doesn't use loop. So even if it's specified, it won't matter.
+            print('flash only')
+            self.flash_visualization()
+                
 
     def pulse_visualization(self):
         if self.loop:
@@ -144,7 +169,6 @@ class BlinkStickViz:
 
     def flash_visualization(self):
         last_frame = [0]*self.count # For smooth transitions, we need to know what things looked like last frame.
-
         sent = 0
         for frame in self.leds:
             data = []
@@ -201,7 +225,7 @@ def readme():
 Blinkstick Audio LED Visualizer 
 
     Usage:
-        -m, --modes          Visualization Modes (required), Options: all, pulse, blink, loop (list type)
+        -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3)
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py 
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
@@ -220,18 +244,18 @@ if __name__ == '__main__':
     ## Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-readme','--readme', help='Display Readme/Help.', action='store_true')
-    parser.add_argument('-m', '--modes', help='Visualization Modes', nargs='+')
+    parser.add_argument('-m', '--modes', help='Visualization Modes (required). Options: all, pulse, blink, loop (list type)', nargs='+')
     parser.add_argument('-s', '--sensitivity', help='Sensitivity to Sound. (Default: 1.3)', default=1.3)    
     parser.add_argument('-d', '--dev', help='Input Device (Default: default device)', default=None)
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
-    parser.add_argument('-c', '--chunk', help='Input Device Chunk Size (Default: 1024)', default=1024)    
+    parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)    
     args = parser.parse_args()
 
     ## Command line argument handlers
     if args.readme:
         readme()
     elif args.modes is not None:
-        BlinkStickViz(modes=args.modes, sensitivity=args.sensitivity, device=args.dev)
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, device=args.dev).main(modes=args.modes)
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
