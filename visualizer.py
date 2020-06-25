@@ -51,7 +51,7 @@ class BlinkStickViz:
         self.wait_interval_min = 5 # Minimum time in seconds visualization will run before switching.
         self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False. 
         
-        # Init Blinkstick and Audio pickup. Create leds object that we can loop over in the visualization methods.
+        # Init Blinkstick, Audio input, and Analyze/Read Audio. Create self.leds object, so we can loop over in the visualization methods.
         self.stick = blinkstick.find_first() # Discover Blinkstick Device.
         self.count = self.stick.get_led_count() # Determine the LED count by querying the stick.
         self.audio_stream = self.input_device() # Init microphone as input source/stream.
@@ -242,7 +242,6 @@ class BlinkStickViz:
             last_frame = frame
             if self.stop == True:
                 break
-  
 
 
 def readme():
