@@ -258,6 +258,7 @@ Blinkstick Audio LED Visualizer
     Command Examples:
         python3 visualizer.py --modes all                                            # Switches between all visualization modes at random interval.
         python3 visualizer.py --modes pulse loop                                     # Example of a targeted mode selection.
+        python3 visualizer.py --modes flash pulse                                    # Example of a targeted mode selection.        
         python3 visualizer.py --modes pulse loop --sensitivity 1                     # Example of non-default sound sensitivity adjustment.
         python3 visualizer.py --modes pulse loop --dev 1 --rate 48000 --chunk 4096   # Example of non-default device, Input Device Hz rate, and chunk size.
     ''')
