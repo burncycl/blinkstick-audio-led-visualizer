@@ -185,7 +185,7 @@ class BlinkStickViz:
 
             sent = time()
             self.send_to_stick(finaldata)
-            if self.stop == True:
+            if self.stop == True: # Handle stopping the thread, so another visualization can be executed.
                 break
 
 
@@ -240,7 +240,7 @@ class BlinkStickViz:
             sent = time()
             self.send_to_stick(data)
             last_frame = frame
-            if self.stop == True:
+            if self.stop == True: # Handle stopping the thread, so another visualization can be executed.
                 break
 
 
@@ -250,7 +250,7 @@ Blinkstick Audio LED Visualizer
 
     Usage:
         -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
-        -s, --sensitivity    Sensitivity to Sound (Default: 1.3)
+        -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py 
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).
