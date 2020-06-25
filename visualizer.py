@@ -46,9 +46,8 @@ class BlinkStickViz:
         self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.        
         self.sensitivity = sensitivity # Sensitivity to sound.                
         self.sample_rate = 1024 # Haven't seen this tuned. But perhaps?
-        self.wait_interval = None # Randomly set interval to wait before switching to another visualization. Default to None.
-        self.wait_interval_max = 60 # Max time in seconds visualization will run before switching.
-        self.wait_interval_min = 5 # Minimum time in seconds visualization will run before switching.
+        wait_interval_max = 60 # Maximum time in seconds visualization will run before switching.
+        wait_interval_min = 5 # Minimum time in seconds visualization will run before switching.
         self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False. 
         
         # Init Blinkstick, Audio input, and Analyze/Read Audio. Create self.leds object, so we can loop over in the visualization methods.
@@ -123,8 +122,8 @@ class BlinkStickViz:
 
                 
     def random_visualization_handler(self, loop):
-        visualizations = [self.pulse_visualization, self.flash_visualization]
-        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
+        visualizations = [self.pulse_visualization, self.flash_visualization] # If more visualizations created, add them to this list.
+        wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
         while True:
             self.stop = False # Always start the loop with stop Default to False                 
             # Loop Handler
@@ -134,15 +133,15 @@ class BlinkStickViz:
                 self.loop = False
             elif loop == 'random':
                 self.loop = random.choice([True, False])
-            visualization_picked = random.choice(visualizations)
-            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked)) 
-            t = Thread(target=visualization_picked, daemon=True)
+            visualization = random.choice(visualizations)
+            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(wait_interval, self.loop, visualization)) 
+            t = Thread(target=visualization)
             t.start()
-            sleep(self.wait_interval)
+            sleep(wait_interval)
             self.stop = True
             t.do_run = False
             t.join()                
-            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
+            wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
             
 
     def pulse_visualization(self):
@@ -249,7 +248,7 @@ def readme():
 Blinkstick Audio LED Visualizer 
 
     Usage:
-        -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
+        -m, --modes          Visualization Modes (Required). Options: all, pulse, blink, loop (list type)
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py 
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
@@ -269,7 +268,7 @@ if __name__ == '__main__':
     ## Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-readme','--readme', help='Display Readme/Help.', action='store_true')
-    parser.add_argument('-m', '--modes', help='Visualization Modes (required). Options: all, pulse, blink, loop (list type)', nargs='+')
+    parser.add_argument('-m', '--modes', help='Visualization Modes (Required). Options: all, pulse, blink, loop (list type)', nargs='+')
     parser.add_argument('-s', '--sensitivity', help='Sensitivity to Sound. (Default: 1.3)', default=1.3)    
     parser.add_argument('-d', '--dev', help='Input Device (Default: default device)', default=None)
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
@@ -282,6 +281,6 @@ if __name__ == '__main__':
     elif args.modes is not None:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, device=args.dev).main(modes=args.modes)
     else:
-        print('README: python3 visualizer.py -readme')
+        print('README: python3 visualizer.py --readme')
         sys.exit(0)
 
