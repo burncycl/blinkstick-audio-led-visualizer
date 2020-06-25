@@ -13,6 +13,6 @@ Original Code References (Will Yager & Different55 <burritosaur@protonmail.com>)
 I liked the results of Will Yager & Different55's effort. However, their projects lacked solid documentation (especially software dependency details). 
 There were also a few things I found broken (like using newer versions of numpy broke things in addition to seeing method deprecation warnings).
 
-It also appears that both of these projects are relatively unmaintained/orphaned.
+It also appears that both of these projects are relatively unmaintained.
 
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
