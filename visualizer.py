@@ -46,8 +46,10 @@ class BlinkStickViz:
         self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.        
         self.sensitivity = sensitivity # Sensitivity to sound.                
         self.sample_rate = 1024 # Haven't seen this tuned. But perhaps?
-        self.running = False
-        self.interval = None
+        self.wait_interval = None # Randomly set interval to wait before switching to another visualization. Default to None.
+        self.wait_interval_max = 60 # Max time in seconds visualization will run before switching.
+        self.wait_interval_min = 5 # Minimum time in seconds visualization will run before switching.
+        self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False. 
         
         # Init Blinkstick and Audio pickup. Create leds object that we can loop over in the visualization methods.
         self.stick = blinkstick.find_first() # Discover Blinkstick Device.
@@ -94,36 +96,54 @@ class BlinkStickViz:
         self.stick.set_led_data(0, strip)
 
 
-    def main(self, modes):
-        print(modes)
-        visualizations = [self.pulse_visualization, self.flash_visualization]
-        #loop = [self.loop = True, self.loop = False]
-        
-        # Always start with the more complex conditional and move to simplest.
-        if 'pulse' in modes and 'loop' in modes:
-            print('pulse and loop')
+    def main(self, modes):                
+        # Start with more complex conditional for the mode and move to simpler.
+        if 'all' in modes:
+            print('All - Pulse, Flash, and Loop (randomly).')
+            self.random_visualization_handler(loop='random')            
+        elif 'pulse' in modes and 'flash' in modes and 'loop' in modes:
+            print('Pulse with Loop (static) and Flash.')
+            self.random_visualization_handler(loop=True)
+        elif 'pulse' in modes and 'flash' in modes:
+            print('Pulse and Flash')
+            self.random_visualization_handler(loop=False)
+        elif 'pulse' in modes and 'loop' in modes:
+            print('Pulse with Loop.')
             self.loop = True
             self.pulse_visualization()
-        elif 'pulse' in modes and 'flash' in modes:
-            print('pulse and flash')
-            self.interval = random.randint(1,5)
-            
-            while True:
-                print('sleeping {}'.format(self.interval))
-                t = Thread(target=self.pulse_visualization, daemon=True)
-                t.start()
-                sleep(self.interval)
-                t.do_run = False
-                t.join()               
-                self.interval = random.randint(1,5)
-                
-        elif 'pulse' in modes:
-            print('pulse only')
-            self.pulse_visualization()
-        elif 'flash' in modes: # Note: flash doesn't use loop. So even if it's specified, it won't matter.
-            print('flash only')
+        elif 'flash' in modes and 'loop' in modes: # Note: flash visualization doesn't use loop. So even if it's specified, it won't matter.
+            print('Flash only. Loop has no affect.')
             self.flash_visualization()
+        elif 'pulse' in modes:
+            print('Pulse only.')
+            self.pulse_visualization()
+        elif 'flash' in modes:
+            print('Flash only.')
+            self.flash_visualization()
+
                 
+    def random_visualization_handler(self, loop):
+        visualizations = [self.pulse_visualization, self.flash_visualization]
+        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
+        while True:
+            self.stop = False # Always start the loop with stop Default to False                 
+            # Loop Handler
+            if loop == True:
+                self.loop = True
+            elif loop == False:
+                self.loop = False
+            elif loop == 'random':
+                self.loop = random.choice([True, False])
+            visualization_picked = random.choice(visualizations)
+            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked)) 
+            t = Thread(target=visualization_picked, daemon=True)
+            t.start()
+            sleep(self.wait_interval)
+            self.stop = True
+            t.do_run = False
+            t.join()                
+            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
+            
 
     def pulse_visualization(self):
         if self.loop:
@@ -165,6 +185,8 @@ class BlinkStickViz:
 
             sent = time()
             self.send_to_stick(finaldata)
+            if self.stop == True:
+                break
 
 
     def flash_visualization(self):
@@ -217,7 +239,10 @@ class BlinkStickViz:
 
             sent = time()
             self.send_to_stick(data)
-            last_frame = frame        
+            last_frame = frame
+            if self.stop == True:
+                break
+  
 
 
 def readme():
