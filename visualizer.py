@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # 2020/06 BuRnCycL
-# Blinkstick Audio LED Visualizer 
+# Blinkstick Audio LED Visualizer
 #### Bibliography
 # Original Code References (Will Yager & Different55 <burritosaur@protonmail.com>):
 # - https://gitgud.io/diff-blinkstick/blinkpulse-visualizer/
@@ -9,10 +9,10 @@
 # - http://yager.io/LEDStrip/LED.html
 # - https://github.com/wyager/LEDStrip
 #### About
-# I liked the results of Will Yager & Different55's effort. However, their projects lacked solid documentation (especially software dependency details). 
+# I liked the results of Will Yager & Different55's effort. However, their projects lacked solid documentation (especially software dependency details).
 # There were also a few things I found broken (like using newer versions of numpy broke things in addition to seeing method deprecation warnings).
 # It also appears that both of these projects are relatively unmaintained/orphaned.
-# Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
+# Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.
 #### Dependency Information
 # Written and tested on Debian Buster for Raspberry Pi (ARM) & Ubuntu 18.04 (x86)
 # Hardware Dependency on WS2812B RGB LEDs & Blinkstick USB Micro-controller: https://www.blinkstick.com/products/blinkstick-flex
@@ -33,7 +33,7 @@ from threading import Thread
 class BlinkStickViz:
     def __init__(self, sensitivity, rate, chunk, max_int, min_int, device=None):
         # Declare variables, not war.
-        if int(max_int) < int(min_int): # Handle error scenario.  
+        if int(max_int) < int(min_int): # Handle error scenario.
             print('ERROR - Maximum visualization transition interval ({}s) cannot be less than Minimum transition interval ({}s).'.format(max_int, min_int))
             sys.exit(1)
         # PyAudio Variables.
@@ -43,26 +43,45 @@ class BlinkStickViz:
         self.channels = 2
         self.rate = rate # This may need to be tuned to 48000Hz
         self.chunk = chunk # This may need to be tunend to 512, 2048, or 4096.
-        
-        # Visualization Variables.        
-        self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.        
-        self.sensitivity = sensitivity # Sensitivity to sound.                
+
+        # Visualization Variables.
+        self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.
+        self.sensitivity = sensitivity # Sensitivity to sound.
         self.sample_rate = 1024 # Haven't seen this tuned. But perhaps?
-        self.wait_interval = None # Randomly set interval to wait before switching to another visualization. Default to None.
         self.wait_interval_max = int(max_int) # Max time in seconds visualization will run before switching.
         self.wait_interval_min = int(min_int) # Minimum time in seconds visualization will run before switching.
-        self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False. 
-        
-        # Init Blinkstick, Audio input, and Analyze/Read Audio. Create self.leds object, so we can loop over in the visualization methods.
-        self.stick = blinkstick.find_first() # Discover Blinkstick Device.
-        self.count = self.stick.get_led_count() # Determine the LED count by querying the stick.
+        self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False.
+
+        # Init Blinkstick, Audio input, and Analyze/Read Audio. Create leds object, so we can loop over in the visualization methods.
+        self.led_count = None # Determine the LED count by querying the stick(s). Populated by self.get_blinksticks() 
+        self.sticks = self.get_blinksticks() #blinkstick.find_first() # Discover Blinkstick Device.        
         self.audio_stream = self.input_device() # Init microphone as input source/stream.
         self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
-        self.leds = notes_scaled_nosaturation.process(self.audio, num_leds=self.count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity) # Pass the Audio Stream to be processed. 
+        
+
+    # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
+    def get_blinksticks(self):
+        discovered_blinksticks = []
+        led_counts = []
+        blinksticks = blinkstick.find_all() # Discover multiple Blinksticks.        
+        for stick in blinksticks:
+            count = stick.get_led_count()
+            led_counts.append(count)       
+            discovered_blinksticks.append(stick)
+        
+        # Verify we're addressing the same number of LEDs for both sticks.
+        led_count = set(led_counts) # Set will deduplicate.
+        if len(led_count) == 1: # Should be left with one, if everything is equal.
+            for count in led_count:
+                self.led_count = int(count)
+        else:
+            print('ERROR - LED Count is NOT equal between Blinksticks: {} - Values should match.'.format(led_count))
+            sys.exit(1)
+        return(discovered_blinksticks)
 
 
     def input_device(self): # i.e. Microphone
-        if self.device is not None: # Use non-default device.                   
+        if self.device is not None: # Use non-default device.
             audio_stream = self.paud.open(
                 format=self.format,
                 channels=self.channels,
@@ -94,15 +113,16 @@ class BlinkStickViz:
             yield samples_l, samples_r
 
 
-    def send_to_stick(self, strip):
-        self.stick.set_led_data(0, strip)
+    def send_to_stick(self, data):    
+        for stick in self.sticks:
+            stick.set_led_data(0, data)
+                        
 
-
-    def main(self, modes):                
+    def main(self, modes):
         # Start with more complex conditional for the mode and move to simpler.
         if 'all' in modes:
             print('All - Pulse, Flash, and Loop (randomly).')
-            self.random_visualization_handler(loop='random')            
+            self.random_visualization_handler(loop='random')
         elif 'pulse' in modes and 'flash' in modes and 'loop' in modes:
             print('Pulse with Loop (static) and Flash.')
             self.random_visualization_handler(loop=True)
@@ -123,12 +143,12 @@ class BlinkStickViz:
             print('Flash only.')
             self.flash_visualization()
 
-                
+
     def random_visualization_handler(self, loop):
         visualizations = [self.pulse_visualization, self.flash_visualization]
-        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
+        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
         while True:
-            self.stop = False # Always start the loop with stop Default to False                 
+            self.stop = False # Always start the loop with stop Default to False
             # Loop Handler
             if loop == True:
                 self.loop = True
@@ -137,25 +157,31 @@ class BlinkStickViz:
             elif loop == 'random':
                 self.loop = random.choice([True, False])
             visualization_picked = random.choice(visualizations)
-            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked)) 
-            t = Thread(target=visualization_picked, daemon=True)
+            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked))
+            t = Thread(target=visualization_picked)
             t.start()
             sleep(self.wait_interval)
             self.stop = True
             t.do_run = False
-            t.join()                
-            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
-            
+            t.join()
+            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
+
+
+    def led_data(self):
+        return(notes_scaled_nosaturation.process(self.audio, num_leds=self.led_count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity)) # Pass the Audio Stream to be processed.
+
 
     def pulse_visualization(self):
+        leds = self.led_data()
+        
         if self.loop:
-            data = [0]*int(self.count/2)*3
-            data2 = [0]*int(self.count/2)*3
+            data = [0]*int(self.led_count/2)*3
+            data2 = [0]*int(self.led_count/2)*3
         else:
-            data = [0]*self.count*3
+            data = [0]*self.led_count*3
 
         sent = 0
-        for frame in self.leds:
+        for frame in leds:
             brightest = 0
             for i, led in enumerate(frame):
                 if led > frame[brightest]:
@@ -192,9 +218,11 @@ class BlinkStickViz:
 
 
     def flash_visualization(self):
-        last_frame = [0]*self.count # For smooth transitions, we need to know what things looked like last frame.
+        leds = self.led_data()
+        
+        last_frame = [0]*self.led_count # For smooth transitions, we need to know what things looked like last frame.
         sent = 0
-        for frame in self.leds:
+        for frame in leds:
             data = []
             size = []
 
@@ -202,36 +230,36 @@ class BlinkStickViz:
             brightest = 0
             totalsize = 0
 
-            for i in range(self.count): # First pass, let's get an idea of how loud things are.
+            for i in range(self.led_count): # First pass, let's get an idea of how loud things are.
                 brightness = brightness + frame[i]
                 if frame[i] > frame[brightest]:
                     brightest = i
 
-            for i in range(self.count): # Second pass, let's try and figure out the rough size of each section.
+            for i in range(self.led_count): # Second pass, let's try and figure out the rough size of each section.
                 if brightness == 0:
                     frame[i] = 1
                     size.append(1)
                     totalsize = totalsize + 1
                     continue
                 try:
-                    size.append(int(frame[i]/brightness*self.count))
+                    size.append(int(frame[i]/brightness*self.led_count))
                     totalsize = totalsize+size[-1]
                 except ValueError:
                     pass
 
             if brightness == 0:
-                brightness = self.count
+                brightness = self.led_count
 
-            while totalsize < self.count:
-                for i in range(self.count):
-                    if totalsize < self.count and size[i] > 0:
+            while totalsize < self.led_count:
+                for i in range(self.led_count):
+                    if totalsize < self.led_count and size[i] > 0:
                         size[i] = size[i] + 1
                         totalsize = totalsize + 1
-                    elif totalsize == self.count:
+                    elif totalsize == self.led_count:
                         break
 
-            for i in range(self.count):
-                hue = i/(self.count*1.75)
+            for i in range(self.led_count):
+                hue = i/(self.led_count*1.75)
                 r, g, b = hsv_to_rgb(hue, 1, min((last_frame[i]*2.6+frame[i]*1.3)/3, 1))
                 data = data+[int(g*255), int(r*255), int(b*255)]*int(size[i])
 
@@ -248,21 +276,21 @@ class BlinkStickViz:
 
 def readme():
     print('''
-Blinkstick Audio LED Visualizer 
+Blinkstick Audio LED Visualizer
     Usage:
         -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
-        -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py 
+        -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).
         -x, --max            Maximum time (in seconds) between visualization transition (Default: 60s). # Note: Max and Min can be equal (thus setting a static transition interval).
         -n, --min            Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
-        
+
     Command Examples:
         python3 visualizer.py --modes all                                            # Switches between all visualization modes at random default (max=60s min=5s) interval.
-        python3 visualizer.py --modes all --max 120 --min 30                         # Switches between all visualization modes at random configured max and min interval (in seconds).        
+        python3 visualizer.py --modes all --max 120 --min 30                         # Switches between all visualization modes at random configured max and min interval (in seconds).
         python3 visualizer.py --modes pulse loop                                     # Example of a targeted mode selection.
-        python3 visualizer.py --modes flash pulse                                    # Example of a targeted mode selection.        
+        python3 visualizer.py --modes flash pulse                                    # Example of a targeted mode selection.
         python3 visualizer.py --modes pulse loop --sensitivity 1                     # Example of non-default sound sensitivity adjustment.
         python3 visualizer.py --modes pulse loop --dev 1 --rate 48000 --chunk 4096   # Example of non-default device, Input Device Hz rate, and chunk size.
     ''')
@@ -274,12 +302,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-readme','--readme', help='Display Readme/Help.', action='store_true')
     parser.add_argument('-m', '--modes', help='Visualization Modes (required). Options: all, pulse, blink, loop (list type)', nargs='+')
-    parser.add_argument('-s', '--sensitivity', help='Sensitivity to Sound. (Default: 1.3)', default=1.3)    
+    parser.add_argument('-s', '--sensitivity', help='Sensitivity to Sound. (Default: 1.3)', default=1.3)
     parser.add_argument('-d', '--dev', help='Input Device (Default: default device)', default=None)
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
     parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)
-    parser.add_argument('-x', '--max', help='Maximum time between transition (Default: 60s)', default=60)        
-    parser.add_argument('-n', '--min', help='Minimum time between transition (Default: 5s)', default=5)    
+    parser.add_argument('-x', '--max', help='Maximum time between transition (Default: 60s)', default=60)
+    parser.add_argument('-n', '--min', help='Minimum time between transition (Default: 5s)', default=5)
     args = parser.parse_args()
 
     ## Command line argument handlers
@@ -290,3 +318,4 @@ if __name__ == '__main__':
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
+
