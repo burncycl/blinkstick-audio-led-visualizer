@@ -21,3 +21,37 @@ Lastly, I chose to use the Blinkstick because breadboards with voltage logic lev
 
 Tested working on Raspios Buster Lite (ARM) and Ubuntu 18.04 (x86)
 
+### Semi-Manual Installation
+
+#### Raspberry Pi
+
+Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and run.
+
+Install git
+```
+sudo apt install git 
+```
+
+Clone this repo
+```
+git clone https://github.com/burncycl/blinkstick-audio-led-visualizer.git
+```
+
+Execute install.sh to install Packager maintained dependencies.
+```
+cd blinkstick-audio-led-visualizer/
+sudo ./install.sh
+```
+
+
+#### Notes for automation with Ansible
+
+Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and run.
+
+As pi user
+```
+raspi-config
+```
+Interfacing Options -> SSH -> Enable "yes"
+
+
