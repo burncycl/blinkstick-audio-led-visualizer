@@ -15,9 +15,9 @@
 # Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.
 #### Dependency Information
 # Written and tested on Debian Buster for Raspberry Pi (ARM) & Ubuntu 18.04 (x86)
-# Hardware Dependency on WS2812B RGB LEDs & Blinkstick USB Micro-controller: https://www.blinkstick.com/products/blinkstick-flex
-# Python-pip - pip3 install colour blinkstick
-# Package Managed - apt install python3 python3-pip python3-pyaudio portaudio19-dev python3-numpy pulseaudio
+# Hardware Dependency on WS2812B RGB LEDs, microphone, and Blinkstick USB Micro-controller: https://www.blinkstick.com/products/blinkstick-flex
+# Python-pip - pip3 install pyaudio blinkstick numpy
+# Package Managed - apt install -y python3 python3-pip python3-virtualenv virtualenv portaudio19-dev pulseaudio libatlas-base-dev
 
 
 import pyaudio as pa
