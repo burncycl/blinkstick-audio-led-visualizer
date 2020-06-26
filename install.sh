@@ -18,7 +18,7 @@ then
 else
 	# Install Packager Maintained Dependencies
 	echo "Apt package manager detected. Proceeding with installation..."
-	$APT install -y python3 python3-pip python3-pyaudio portaudio19-dev python3-numpy pulseaudio
+	$APT install -y python3 python3-pip python3-virtualenv virtualenv python3-pyaudio portaudio19-dev python3-numpy pulseaudio
 	exit 0
 fi
 
