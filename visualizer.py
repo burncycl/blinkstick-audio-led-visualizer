@@ -11,7 +11,7 @@
 #### About
 # I liked the results of Will Yager & Different55's effort. However, their projects lacked solid documentation (especially software dependency details). 
 # There were also a few things I found broken (like using newer versions of numpy broke things in addition to seeing method deprecation warnings).
-# It also appears that both of these projects are relatively unmaintained.
+# It also appears that both of these projects are relatively unmaintained/orphaned.
 # Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
 #### Dependency Information
 # Written and tested on Debian Buster for Raspberry Pi (ARM) & Ubuntu 18.04 (x86)
@@ -31,9 +31,11 @@ from threading import Thread
 
 
 class BlinkStickViz:
-    def __init__(self, sensitivity, rate, chunk, device=None):
+    def __init__(self, sensitivity, rate, chunk, max_int, min_int, device=None):
         # Declare variables, not war.
-                
+        if int(max_int) < int(min_int): # Handle error scenario.  
+            print('ERROR - Maximum visualization transition interval ({}s) cannot be less than Minimum transition interval ({}s).'.format(max_int, min_int))
+            sys.exit(1)
         # PyAudio Variables.
         self.device = device
         self.paud = pa.PyAudio()
@@ -46,8 +48,9 @@ class BlinkStickViz:
         self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.        
         self.sensitivity = sensitivity # Sensitivity to sound.                
         self.sample_rate = 1024 # Haven't seen this tuned. But perhaps?
-        wait_interval_max = 60 # Maximum time in seconds visualization will run before switching.
-        wait_interval_min = 5 # Minimum time in seconds visualization will run before switching.
+        self.wait_interval = None # Randomly set interval to wait before switching to another visualization. Default to None.
+        self.wait_interval_max = int(max_int) # Max time in seconds visualization will run before switching.
+        self.wait_interval_min = int(min_int) # Minimum time in seconds visualization will run before switching.
         self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False. 
         
         # Init Blinkstick, Audio input, and Analyze/Read Audio. Create self.leds object, so we can loop over in the visualization methods.
@@ -122,8 +125,8 @@ class BlinkStickViz:
 
                 
     def random_visualization_handler(self, loop):
-        visualizations = [self.pulse_visualization, self.flash_visualization] # If more visualizations created, add them to this list.
-        wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
+        visualizations = [self.pulse_visualization, self.flash_visualization]
+        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)            
         while True:
             self.stop = False # Always start the loop with stop Default to False                 
             # Loop Handler
@@ -133,15 +136,15 @@ class BlinkStickViz:
                 self.loop = False
             elif loop == 'random':
                 self.loop = random.choice([True, False])
-            visualization = random.choice(visualizations)
-            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(wait_interval, self.loop, visualization)) 
-            t = Thread(target=visualization)
+            visualization_picked = random.choice(visualizations)
+            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked)) 
+            t = Thread(target=visualization_picked, daemon=True)
             t.start()
-            sleep(wait_interval)
+            sleep(self.wait_interval)
             self.stop = True
             t.do_run = False
             t.join()                
-            wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
+            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)                
             
 
     def pulse_visualization(self):
@@ -246,16 +249,18 @@ class BlinkStickViz:
 def readme():
     print('''
 Blinkstick Audio LED Visualizer 
-
     Usage:
-        -m, --modes          Visualization Modes (Required). Options: all, pulse, blink, loop (list type)
+        -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py 
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).
+        -x, --max            Maximum time (in seconds) between visualization transition (Default: 60s). # Note: Max and Min can be equal (thus setting a static transition interval).
+        -n, --min            Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
         
     Command Examples:
-        python3 visualizer.py --modes all                                            # Switches between all visualization modes at random interval.
+        python3 visualizer.py --modes all                                            # Switches between all visualization modes at random default (max=60s min=5s) interval.
+        python3 visualizer.py --modes all --max 120 --min 30                         # Switches between all visualization modes at random configured max and min interval (in seconds).        
         python3 visualizer.py --modes pulse loop                                     # Example of a targeted mode selection.
         python3 visualizer.py --modes flash pulse                                    # Example of a targeted mode selection.        
         python3 visualizer.py --modes pulse loop --sensitivity 1                     # Example of non-default sound sensitivity adjustment.
@@ -268,19 +273,20 @@ if __name__ == '__main__':
     ## Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-readme','--readme', help='Display Readme/Help.', action='store_true')
-    parser.add_argument('-m', '--modes', help='Visualization Modes (Required). Options: all, pulse, blink, loop (list type)', nargs='+')
+    parser.add_argument('-m', '--modes', help='Visualization Modes (required). Options: all, pulse, blink, loop (list type)', nargs='+')
     parser.add_argument('-s', '--sensitivity', help='Sensitivity to Sound. (Default: 1.3)', default=1.3)    
     parser.add_argument('-d', '--dev', help='Input Device (Default: default device)', default=None)
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
-    parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)    
+    parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)
+    parser.add_argument('-x', '--max', help='Maximum time between transition (Default: 60s)', default=60)        
+    parser.add_argument('-n', '--min', help='Minimum time between transition (Default: 5s)', default=5)    
     args = parser.parse_args()
 
     ## Command line argument handlers
     if args.readme:
         readme()
     elif args.modes is not None:
-        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, device=args.dev).main(modes=args.modes)
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, max_int=args.max, min_int=args.min, device=args.dev).main(modes=args.modes)
     else:
-        print('README: python3 visualizer.py --readme')
+        print('README: python3 visualizer.py -readme')
         sys.exit(0)
-

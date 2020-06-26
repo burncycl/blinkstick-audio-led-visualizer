@@ -16,3 +16,8 @@ There were also a few things I found broken (like using newer versions of numpy 
 It also appears that both of these projects are relatively unmaintained.
 
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
+
+### Dependencies
+
+Tested working on Raspios Buster Lite (ARM) and Ubuntu 18.04 (x86)
+
