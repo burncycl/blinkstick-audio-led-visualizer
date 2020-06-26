@@ -17,15 +17,17 @@ It also appears that both of these projects are relatively unmaintained.
 
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
 
+Support exists for running multiple Blinksticks. However, this runs sub-optimally on Raspberry Pi 3 B+
+
 ### Dependencies
 
-Tested working on Raspios Buster Lite (ARM) and Ubuntu 18.04 (x86)
+Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
 ### Semi-Manual Installation
 
 #### Raspberry Pi
 
-Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and run.
+Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and install the following Prerequisites.
 
 Install git
 ```
@@ -37,7 +39,7 @@ Clone this repo
 git clone https://github.com/burncycl/blinkstick-audio-led-visualizer.git
 ```
 
-Execute install.sh to install Packager maintained dependencies.
+Execute install.sh to install apt packager maintained dependencies.
 ```
 cd blinkstick-audio-led-visualizer/
 sudo ./install.sh
