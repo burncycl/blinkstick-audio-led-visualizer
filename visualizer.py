@@ -43,8 +43,9 @@ class BlinkStickViz:
         self.receive_address = '0.0.0.0' # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
         self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
-        if self.transmit == True:
-            self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file. 
+        if self.transmit == True:            
+            self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file.
+            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes))
 
         # PyAudio Variables.
         self.device = device
