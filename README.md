@@ -72,7 +72,7 @@ Clone this repo
 git clone https://github.com/burncycl/blinkstick-audio-led-visualizer.git
 ```
 
-Execute *install.sh* to install apt packager maintained dependencies.
+Execute `install.sh` to install apt packager maintained dependencies.
 ```
 cd blinkstick-audio-led-visualizer/
 sudo ./install.sh
