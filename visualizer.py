@@ -199,7 +199,7 @@ class BlinkStickViz:
 
     def random_visualization_handler(self, loop):
         visualizations = [self.pulse_visualization, self.flash_visualization] # If you create more visualization functions, add them to this list
-        self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
+        wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
         while True:
             self.stop = False # Always start the loop with stop Default to False
             # Loop Handler
@@ -210,14 +210,14 @@ class BlinkStickViz:
             elif loop == 'random':
                 self.loop = random.choice([True, False])
             visualization_picked = random.choice(visualizations)
-            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(self.wait_interval, self.loop, visualization_picked))
+            print('Waiting: {}s, Loop: {}, Visualization: {}'.format(wait_interval, self.loop, visualization_picked))
             t = Thread(target=visualization_picked)
             t.start()
-            sleep(self.wait_interval)
+            sleep(wait_interval)
             self.stop = True
             t.do_run = False
             t.join()
-            self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
+            wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
 
 
     def led_data(self):        
