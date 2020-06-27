@@ -65,12 +65,11 @@ class BlinkStickViz:
         # Init Blinkstick, Audio input, and Analyze/Read Audio. Create leds object, so we can loop over in the visualization methods.
         self.led_count = None # Determine the LED count by querying the stick(s). Populated by self.get_blinksticks() 
         self.sticks = self.get_blinksticks() #blinkstick.find_first() # Discover Blinkstick Device.        
-        
         if self.receive == False: # If not in UDP receive mode, go ahead an Init the audio device and read the stream. 
             self.audio_stream = self.input_device() # Init microphone as input source/stream.
             self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
-        if self.transmit == True:
-            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port)) # Tell us if we're in transmit mode after audio init. Looks better. 
+        if self.transmit == True: # Tell us if we're in transmit mode after audio init. Looks better.
+            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port))
         
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
