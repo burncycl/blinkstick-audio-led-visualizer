@@ -14,7 +14,7 @@
 # It also appears that both of these projects are relatively unmaintained/orphaned.
 # Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.
 #### Dependency Information
-# Written and tested on Debian Buster for Raspberry Pi (ARM) & Ubuntu 18.04 (x86)
+# Written and tested on Raspberry Pi B+ running Raspios Debian Buster (ARM) & Ubuntu 18.04 (x86)
 # Hardware Dependency on WS2812B RGB LEDs, microphone, and Blinkstick USB Micro-controller: https://www.blinkstick.com/products/blinkstick-flex
 # Python-pip - pip3 install pyaudio blinkstick numpy
 # Package Managed - apt install -y python3 python3-pip python3-virtualenv virtualenv portaudio19-dev pulseaudio libatlas-base-dev
@@ -27,20 +27,28 @@ import notes_scaled_nosaturation
 from time import sleep, time
 from colorsys import hsv_to_rgb
 import argparse, sys, random
+from os import path
 from threading import Thread
+from socket import *
+import pickle
 
 
 class BlinkStickViz:
-    def __init__(self, sensitivity, rate, chunk, max_int, min_int, device=None):
-        # Declare variables, not war.
-        if int(max_int) < int(min_int): # Handle error scenario.
-            print('ERROR - Maximum visualization transition interval ({}s) cannot be less than Minimum transition interval ({}s).'.format(max_int, min_int))
-            sys.exit(1)
+    def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, device=None):
+        # Declare variables, not war.        
+        
+        # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
+        self.transmit = transmit
+        self.receive = receive
+        self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
+        self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
+        self.receive_nodes = [] # Empty List of receive nodes. Populated by self.get_receive_nodes()
+
         # PyAudio Variables.
         self.device = device
         self.paud = pa.PyAudio()
         self.format = pa.paInt16
-        self.channels = 2
+        self.channels = channels # This may need to be lowered depending on the device used.
         self.rate = rate # This may need to be tuned to 48000Hz
         self.chunk = chunk # This may need to be tunend to 512, 2048, or 4096.
 
@@ -55,8 +63,10 @@ class BlinkStickViz:
         # Init Blinkstick, Audio input, and Analyze/Read Audio. Create leds object, so we can loop over in the visualization methods.
         self.led_count = None # Determine the LED count by querying the stick(s). Populated by self.get_blinksticks() 
         self.sticks = self.get_blinksticks() #blinkstick.find_first() # Discover Blinkstick Device.        
-        self.audio_stream = self.input_device() # Init microphone as input source/stream.
-        self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
+        
+        if self.receive == False: # If not in UDP receive mode, go ahead an Init the audio device and read the stream. 
+            self.audio_stream = self.input_device() # Init microphone as input source/stream.
+            self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
         
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
@@ -113,10 +123,45 @@ class BlinkStickViz:
             yield samples_l, samples_r
 
 
-    def send_to_stick(self, data):    
+    def get_receive_nodes(self):
+        if path.isfile(self.receive_nodes_file):
+            with open(self.receive_nodes_file, 'r+') as f:
+                ip_addresses = f.readlines()
+                for ip_address in ip_addresses:
+                    if '.' in ip_address: # Chuck any line that doesn't have a dot in it (i.e. an IP address format 10.9.9.X). 
+                        self.receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.
+                    else:
+                        continue # Skip lines without dots.
+            print(self.receive_nodes)
+        else:
+            print('ERROR - Receive nodes file not found: {}. Please create this file with each receving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
+            sys.exit(1)
+            
+
+    def udp_transmit(self, data):
+        data = pickle.dumps(data) # Serialize the data for transmission.        
+        for receive_ip in self.receive_nodes: # Loop over the list of hosts.
+            receive_port = self.receive_port
+            transmit_socket = socket(AF_INET, SOCK_DGRAM)
+            transmit_socket.sendto(data,(receive_ip, receive_port))
+
+
+    def udp_receive(self):
+        receive_port = self.receive_port
+        receive_socket = socket(AF_INET, SOCK_DGRAM)
+        receive_socket.bind(('0.0.0.0', receive_port)) # Hard-coded bind to 0.0.0.0 interface.
+        while 1:
+            data = receive_socket.recv(2048)
+            decoded_data = pickle.loads(data) # De-serialize the received data. 
+            self.send_to_stick(decoded_data)
+ 
+ 
+    def send_to_stick(self, data):
+        if self.transmit == True: # If we're in transmit mode send the led data via UDP.
+            self.udp_transmit(data)                
         for stick in self.sticks:
             stick.set_led_data(0, data)
-                        
+                          
 
     def main(self, modes):
         # Start with more complex conditional for the mode and move to simpler.
@@ -167,8 +212,8 @@ class BlinkStickViz:
             self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
 
 
-    def led_data(self):
-        return(notes_scaled_nosaturation.process(self.audio, num_leds=self.led_count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity)) # Pass the Audio Stream to be processed.
+    def led_data(self):        
+        return(notes_scaled_nosaturation.process(self.audio, num_leds=self.led_count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity)) # Return the processed audio stream to the visualizer functions.
 
 
     def pulse_visualization(self):
@@ -277,22 +322,28 @@ class BlinkStickViz:
 def readme():
     print('''
 Blinkstick Audio LED Visualizer
+
     Usage:
-        -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (list type)
+        -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (List type - Can specify multiple options).
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).
-        -x, --max            Maximum time (in seconds) between visualization transition (Default: 60s). # Note: Max and Min can be equal (thus setting a static transition interval).
-        -n, --min            Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
+        -ch, --channels      Input Device Number of Channels (Default: 2). Likely Alternative set to: 1
+        -mx, --max           Maximum time (in seconds) between visualization transition (Default: 35s). # Note: Max and Min can be equal (thus setting a static transition interval).
+        -mn, --min           Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
+        -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
+        -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.  
+ 
 
     Command Examples:
-        python3 visualizer.py --modes all                                            # Switches between all visualization modes at random default (max=60s min=5s) interval.
-        python3 visualizer.py --modes all --max 120 --min 30                         # Switches between all visualization modes at random configured max and min interval (in seconds).
-        python3 visualizer.py --modes pulse loop                                     # Example of a targeted mode selection.
-        python3 visualizer.py --modes flash pulse                                    # Example of a targeted mode selection.
-        python3 visualizer.py --modes pulse loop --sensitivity 1                     # Example of non-default sound sensitivity adjustment.
-        python3 visualizer.py --modes pulse loop --dev 1 --rate 48000 --chunk 4096   # Example of non-default device, Input Device Hz rate, and chunk size.
+        python3 visualizer.py --modes all                                                        # Switches between all visualization modes at random interval (Default: max=35s min=5s).
+        python3 visualizer.py --modes all --max 120 --min 30                                     # Switches between all visualization modes at random configured max and min interval (in seconds).
+        python3 visualizer.py --modes pulse loop                                                 # Example of a targeted mode selection. Personal favorite visualization settings.
+        python3 visualizer.py --modes flash pulse                                                # Example of a targeted mode selection.
+        python3 visualizer.py --modes pulse loop --sensitivity 1                                 # Example of non-default sound sensitivity adjustment.
+        python3 visualizer.py --modes pulse loop --dev 1 --rate 48000 --chunk 4096 --channels 1  # Example of non-default device, Input Device Hz rate, chunk size, and channels.
+        python3 visualizer.py --modes pulse loop --transmit                                      # Example of transmit mode.        
     ''')
     sys.exit(0)
 
@@ -306,15 +357,29 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dev', help='Input Device (Default: default device)', default=None)
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
     parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)
-    parser.add_argument('-x', '--max', help='Maximum time between transition (Default: 60s)', default=60)
-    parser.add_argument('-n', '--min', help='Minimum time between transition (Default: 5s)', default=5)
+    parser.add_argument('-ch', '--channels', help='Input Device Number of Channels (Default: 2)', default=2)
+    parser.add_argument('-mx', '--max', help='Maximum time between transition (Default: 35s)', default=35)
+    parser.add_argument('-mn', '--min', help='Minimum time between transition (Default: 5s)', default=5)
+    parser.add_argument('-tx', '--transmit', help='Transmit Mode via UDP (Default: False)', default=False, action='store_true')
+    parser.add_argument('-rx', '--receive', help='Receive Mode via UDP (Default: False)', default=False, action='store_true')    
     args = parser.parse_args()
 
     ## Command line argument handlers
     if args.readme:
         readme()
+    # Handle error scenarios. 
+    elif args.transmit == True and args.receive == True:
+        print('ERROR - Cannot both Transmit and Receive. Please pick one or the other.')
+        sys.exit(1)
+    elif int(args.max) < int(args.min): 
+        print('ERROR - Maximum visualization transition interval ({}s) cannot be less than Minimum transition interval ({}s).'.format(args.max, args.min))
+        sys.exit(1)
+    # Handle Receive mode.
+    elif args.receive == True:
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).get_receive_nodes()
+    # Handle primary modes.
     elif args.modes is not None:
-        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, max_int=args.max, min_int=args.min, device=args.dev).main(modes=args.modes)
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).main(modes=args.modes)
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
