@@ -10,7 +10,7 @@ Original Code References (Will Yager & Different55 <burritosaur@protonmail.com>)
 
 ### About
 
-I liked the results of Will Yager & Different55's effort. However, their projects lacked detailed dependency documentation/installation.
+I liked the results of Will Yager & Different55's efforts. However, their projects lacked detailed dependency documentation/installation.
 There were also a few things I found broken or stale. For example using newer versions of numpy broke due to deprecation warnings coming to life.
 
 It also appears that both of these projects are relatively unmaintained.
