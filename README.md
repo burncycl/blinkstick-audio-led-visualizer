@@ -78,6 +78,19 @@ cd blinkstick-audio-led-visualizer/
 sudo ./install.sh
 ```
 
+### Manual Depdency Installation
+Recommend you use the `install.sh` script and use Python Virtual Environments, as opposed to running these commands manually.
+
+Python
+```
+pip3 install pyaudio blinkstick numpy
+```
+
+Apt Package Managed 
+```
+apt install -y python3 python3-pip python3-virtualenv virtualenv portaudio19-dev pulseaudio libatlas-base-dev
+```
+
 ### Run Visualizations
 
 Setup Python Virtual Environment with all Python dependencies
