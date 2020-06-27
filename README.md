@@ -1,6 +1,6 @@
 ### 2020/06 BuRnCycL
 
-Blinkstick Audio LED Visualizer
+**Blinkstick Audio LED Visualizer**
 
 Original Code References (Will Yager & Different55 <burritosaur@protonmail.com>):
  - https://gitgud.io/diff-blinkstick/blinkpulse-visualizer/
