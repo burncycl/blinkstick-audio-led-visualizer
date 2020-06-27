@@ -102,7 +102,7 @@ python3 visualize.py --readme
 ```
 
 ### Network Mode Visualizations
-Create *receive_nodes.list* and populate it with IP addresses. Port is UDP 12000
+On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
 
 ```
 touch receive_nodes.list
@@ -124,6 +124,8 @@ On transmitting Pi
 ```
 python3 visualizer.py --modes pulse loop --transmit
 ```
+
+Note: Utilizes UDP port 12000
 
 ### TODO
 
