@@ -151,6 +151,7 @@ class BlinkStickViz:
     def udp_receive(self):
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         receive_socket = socket(AF_INET, SOCK_DGRAM)
+        receive_socket = receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, 1) # Set receive buffer size to 1.
         receive_socket.bind((self.receive_address, self.receive_port)) 
         while 1:
             data = receive_socket.recv(self.chunk)
@@ -160,7 +161,7 @@ class BlinkStickViz:
  
     def send_to_stick(self, data):
         if self.transmit == True: # If we're in transmit mode send the led data via UDP.
-            self.udp_transmit(data)                
+            self.udp_transmit(data)
         for stick in self.sticks:
             stick.set_led_data(0, data)
                           
