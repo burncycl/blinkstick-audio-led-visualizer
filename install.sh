@@ -16,10 +16,11 @@ then
 	echo "Recommend distros are Raspios Buster or Ubuntu 18.04+"
 	exit 1
 else
-	# Install Packager Maintained Dependencies
+	# Install Packager Maintained Dependencies.
 	echo "Apt package manager detected. Proceeding with installation..."
 	$APT install -y python3 python3-pip python3-virtualenv virtualenv portaudio19-dev pulseaudio libatlas-base-dev
-	echo "Adding udevadm exception, so visualizer can be run as non-root user."
+	# Add udevadm exception for non-root execution.
+	echo "Adding udevadm exception, so visualizer can be run as non-root user..."
 	echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="20a0", ATTR{idProduct}=="41e5", MODE:="0666"' > /etc/udev/rules.d/85-blinkstick.rules
 	udevadm trigger
 	exit 0
