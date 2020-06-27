@@ -40,6 +40,7 @@ class BlinkStickViz:
         # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
         self.transmit = transmit
         self.receive = receive
+        self.receive_address = '0.0.0.0' # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
         self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
         if self.transmit == True:
@@ -146,8 +147,9 @@ class BlinkStickViz:
 
 
     def udp_receive(self):
+        print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         receive_socket = socket(AF_INET, SOCK_DGRAM)
-        receive_socket.bind(('0.0.0.0', self.receive_port)) # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
+        receive_socket.bind((self.receive_address, self.receive_port)) 
         while 1:
             data = receive_socket.recv(2048)
             decoded_data = pickle.loads(data) # De-Serialize the received data. 
