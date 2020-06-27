@@ -86,7 +86,7 @@ source ./init.sh
 ```
 Important to note: The Raspberry Pi needs Pulseaudio. `init.sh` will run this for you.
 
-**Run Visualization**
+**Run Visualizations**
 ```
 python3 visualize.py --modes pulse loop
 ```
