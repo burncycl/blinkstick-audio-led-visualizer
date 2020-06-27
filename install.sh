@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 2020/06 BuRnCycL
-# This will install Packager Maintained Dependencies for blinkstick-audio-led-visualizer
+# This will install Packager Maintained Dependencies for blinkstick-audio-led-visualizer and facilitate non-root execution.
 # Execute script with sudo privledges.
 # e.g. sudo ./install.sh
 
