@@ -42,7 +42,8 @@ class BlinkStickViz:
         self.receive = receive
         self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
-        self.receive_nodes = [] # Empty List of receive nodes. Populated by self.get_receive_nodes()
+        if self.receive == True:
+            self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file. 
 
         # PyAudio Variables.
         self.device = device
@@ -132,7 +133,6 @@ class BlinkStickViz:
                         self.receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.
                     else:
                         continue # Skip lines without dots.
-            print(self.receive_nodes)
         else:
             print('ERROR - Receive nodes file not found: {}. Please create this file with each receving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
             sys.exit(1)
@@ -141,19 +141,17 @@ class BlinkStickViz:
     def udp_transmit(self, data):
         data = pickle.dumps(data) # Serialize the data for transmission.        
         for receive_ip in self.receive_nodes: # Loop over the list of hosts.
-            receive_port = self.receive_port
             transmit_socket = socket(AF_INET, SOCK_DGRAM)
-            transmit_socket.sendto(data,(receive_ip, receive_port))
+            transmit_socket.sendto(data,(receive_ip, self.receive_port))
 
 
     def udp_receive(self):
-        receive_port = self.receive_port
         receive_socket = socket(AF_INET, SOCK_DGRAM)
-        receive_socket.bind(('0.0.0.0', receive_port)) # Hard-coded bind to 0.0.0.0 interface.
+        receive_socket.bind(('0.0.0.0', self.receive_port)) # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
         while 1:
             data = receive_socket.recv(2048)
-            decoded_data = pickle.loads(data) # De-serialize the received data. 
-            self.send_to_stick(decoded_data)
+            decoded_data = pickle.loads(data) # De-Serialize the received data. 
+            self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
  
  
     def send_to_stick(self, data):
@@ -376,8 +374,8 @@ if __name__ == '__main__':
         sys.exit(1)
     # Handle Receive mode.
     elif args.receive == True:
-        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).get_receive_nodes()
-    # Handle primary modes.
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).udp_receive()
+    # Handle Main
     elif args.modes is not None:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).main(modes=args.modes)
     else:
