@@ -15,6 +15,8 @@ There were also a few things I found broken or stale. For example using newer ve
 
 It also appears that both of these projects are relatively unmaintained.
 
+I wanted additional features, like scalability via Network.
+
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
 
 **Features**
