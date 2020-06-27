@@ -18,18 +18,41 @@ It also appears that both of these projects are relatively unmaintained.
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
 
 *Features*
-- Working and well documented.
-- Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+. Fine on decent x86 processors.
-- Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
-- Modularity so new visualizations can be added in with ease as functions.
-
-### Dependencies
+* Working and well documented.
+* Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+. Fine on decent x86 processors.
+* Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
+* Modularity so new visualizations can be added in with ease as functions.
+* More Object oriented.
 
 Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
-### Semi-Manual Installation
+### Hardware
 
-#### Raspberry Pi
+I don't promise the Amazon links listed will always work, but you can Web Search for said product and find equivalents. 
+
+* Blinkstick Flex (or similar Blinkstick products) 
+- https://www.blinkstick.com/products/blinkstick-flex
+* Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
+- https://amzn.to/31jSQhg
+- https://amzn.to/3fZRHQ8
+- https://amzn.to/3871a5w
+* Raspberry Pi 3 / x86 Computer
+- https://amzn.to/3i8zHVy 
+* WS2812B LED Strip (Important: Blinkstick Flex can only power 32 LEDs. Simply cut the strip to size and solder to micro-controller)
+- https://amzn.to/2NA5u3W
+* Microphone and/or USB External Stereo Sound Adapter 
+- https://amzn.to/31y4FRp
+- https://amzn.to/2YzE0S2
+* MicroUSB cord (first cord I tried was cheap crap, and didn't work)
+- https://amzn.to/3idO37p
+
+### Ansible Automated Installation
+
+Want to provision a fleet of Raspberry Pi's with Blinksticks listening via network?
+
+Reference: https://github.com/burncycl/ansible-blinkstick-audio-led-visualizer
+
+### Semi-Automated Installation
 
 Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and install the following Prerequisites.
 
@@ -49,15 +72,31 @@ cd blinkstick-audio-led-visualizer/
 sudo ./install.sh
 ```
 
+### Run Visualizations
 
-#### Notes for automation with Ansible
-
-Assuming a virgin Raspberry Pi running Raspios Buster Lite. Boot and run.
-
-As pi user
+Setup Python Virtual Environment with all Python dependencies
 ```
-raspi-config
+source ./init.sh
 ```
-Interfacing Options -> SSH -> Enable "yes"
+Important to note: The Raspberry Pi needs Pulseaudio. `init.sh` will run this for you.
 
+*Run Visualization*
+```
+python3 visualize.py --modes pulse loop
+```
+
+or
+```
+python3 visualize.py --modes all
+```
+
+For additional modes of operation reference script readme.
+```
+python3 visualize.py --readme
+```
+
+### TODO
+
+- Implement methods for direct digital input (like an mp3), as opposed to a microphone.
+- Implement passthrough of microphone input to speaker output.
 

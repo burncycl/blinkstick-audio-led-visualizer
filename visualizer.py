@@ -10,7 +10,7 @@
 # - https://github.com/wyager/LEDStrip
 #### About
 # I liked the results of Will Yager & Different55's effort. However, their projects lacked solid documentation (especially software dependency details).
-# There were also a few things I found broken (like using newer versions of numpy broke things in addition to seeing method deprecation warnings).
+# There were also a few things I found broken or stale. For example using newer versions of numpy broke due to deprecation warnings coming to life.
 # It also appears that both of these projects are relatively unmaintained/orphaned.
 # Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.
 #### Dependency Information
