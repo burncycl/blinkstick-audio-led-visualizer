@@ -108,7 +108,7 @@ Create *receive_nodes.list* and populate it with IP addresses. Port is UDP 12000
 touch receive_nodes.list
 ```
 
-*receive_nodes.list* Example:
+Example *receive_nodes.list* 
 ```
 10.3.3.30
 10.3.3.31
