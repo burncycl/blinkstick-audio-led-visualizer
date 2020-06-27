@@ -40,7 +40,7 @@ I don't promise the Amazon links listed will always work, but you can Web Search
   - https://amzn.to/3871a5w
 * Raspberry Pi 3 (or 3 B+) / x86 Computer
   - https://amzn.to/3i8zHVy 
-* WS2812B LED Strip (Important: Blinkstick Flex can only power 32 LEDs. Simply cut the strip to size and solder to micro-controller)
+* WS2812B LED Strip (Important: Blinkstick Flex can only power upto 32 LEDs in it's default configuration. Simply cut the strip to size and solder to micro-controller)
   - https://amzn.to/2NA5u3W
 * Microphone and/or USB External Stereo Sound Adapter 
   - https://amzn.to/31y4FRp
