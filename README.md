@@ -31,20 +31,20 @@ Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.
 I don't promise the Amazon links listed will always work, but you can Web Search for said product and find equivalents. 
 
 * Blinkstick Flex (or similar Blinkstick products) 
- - https://www.blinkstick.com/products/blinkstick-flex
+  - https://www.blinkstick.com/products/blinkstick-flex
 * Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
- - https://amzn.to/31jSQhg
- - https://amzn.to/3fZRHQ8
- - https://amzn.to/3871a5w
+  - https://amzn.to/31jSQhg
+  - https://amzn.to/3fZRHQ8
+  - https://amzn.to/3871a5w
 * Raspberry Pi 3 / x86 Computer
- - https://amzn.to/3i8zHVy 
+  - https://amzn.to/3i8zHVy 
 * WS2812B LED Strip (Important: Blinkstick Flex can only power 32 LEDs. Simply cut the strip to size and solder to micro-controller)
- - https://amzn.to/2NA5u3W
+  - https://amzn.to/2NA5u3W
 * Microphone and/or USB External Stereo Sound Adapter 
- - https://amzn.to/31y4FRp
- - https://amzn.to/2YzE0S2
+  - https://amzn.to/31y4FRp
+  - https://amzn.to/2YzE0S2
 * MicroUSB cord (first cord I tried was cheap crap, and didn't work)
- - https://amzn.to/3idO37p
+  - https://amzn.to/3idO37p
 
 ### Ansible Automated Installation
 
