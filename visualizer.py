@@ -198,7 +198,7 @@ class BlinkStickViz:
 
 
     def random_visualization_handler(self, loop):
-        visualizations = [self.pulse_visualization, self.flash_visualization] # If you create more visualization functions, add them to this list
+        visualizations = [self.pulse_visualization, self.flash_visualization] # If you create more visualization functions, add them to this list.
         wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
         while True:
             self.stop = False # Always start the loop with stop Default to False
@@ -211,7 +211,7 @@ class BlinkStickViz:
                 self.loop = random.choice([True, False])
             visualization_picked = random.choice(visualizations)
             print('Waiting: {}s, Loop: {}, Visualization: {}'.format(wait_interval, self.loop, visualization_picked))
-            t = Thread(target=visualization_picked)
+            t = Thread(target=visualization_picked) # Threading facilitates addressing multiple Blinksticks on the same parent device. 
             t.start()
             sleep(wait_interval)
             self.stop = True
