@@ -102,7 +102,7 @@ python3 visualize.py --readme
 ```
 
 ### Network Mode Visualizations
-Create receive_nodes.list and populate it with IP addresses. Port is UDP 12000
+Create *receive_nodes.list* and populate it with IP addresses. Port is UDP 12000
 
 ```
 touch receive_nodes.list
