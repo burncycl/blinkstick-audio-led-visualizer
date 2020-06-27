@@ -52,7 +52,7 @@ class BlinkStickViz:
         self.format = pa.paInt16
         self.channels = channels # This may need to be lowered depending on the device used.
         self.rate = rate # This may need to be tuned to 48000Hz
-        self.chunk = chunk # This may need to be tunend to 512, 2048, or 4096.
+        self.chunk = chunk # This may need to be tuned to 512, 2048, or 4096.
 
         # Visualization Variables.
         self.loop = None # Pulse from both ends of the strip. Default None, self.main() sets this.
@@ -129,11 +129,13 @@ class BlinkStickViz:
         if path.isfile(self.receive_nodes_file):
             with open(self.receive_nodes_file, 'r+') as f:
                 ip_addresses = f.readlines()
+                receive_nodes = []
                 for ip_address in ip_addresses:
                     if '.' in ip_address: # Chuck any line that doesn't have a dot in it (i.e. an IP address format 10.9.9.X). 
-                        self.receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.
+                        receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.                
                     else:
                         continue # Skip lines without dots.
+                return(receive_nodes)
         else:
             print('ERROR - Receive nodes file not found: {}. Please create this file with each receving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
             sys.exit(1)
@@ -151,7 +153,7 @@ class BlinkStickViz:
         receive_socket = socket(AF_INET, SOCK_DGRAM)
         receive_socket.bind((self.receive_address, self.receive_port)) 
         while 1:
-            data = receive_socket.recv(2048)
+            data = receive_socket.recv(self.chunk)
             decoded_data = pickle.loads(data) # De-Serialize the received data. 
             self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
  
