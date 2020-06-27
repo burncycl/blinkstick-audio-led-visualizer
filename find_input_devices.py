@@ -10,7 +10,7 @@ import pyaudio
 def find_input_devices():
     pa = pyaudio.PyAudio()
     for device_index in range(pa.get_device_count()):
-        devinfo = pa.get_device_info_by_index(i)
+        devinfo = pa.get_device_info_by_index(device_index)
         print('Device Id: {}, Name: {}'.format(device_index, devinfo['name']))
 
 
