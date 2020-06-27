@@ -102,7 +102,7 @@ python3 visualize.py --readme
 ```
 
 ### Network Mode Visualizations
-On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone), Create *receive_nodes.list* and populate it with IP addresses.
+On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
 
 ```
 touch receive_nodes.list
