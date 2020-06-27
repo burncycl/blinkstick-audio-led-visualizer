@@ -74,13 +74,13 @@ class BlinkStickViz:
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
     def get_blinksticks(self):
-        discovered_blinksticks = []
+        found_blinksticks = []
         led_counts = []
         blinksticks = blinkstick.find_all() # Discover multiple Blinksticks.        
         for stick in blinksticks:
             count = stick.get_led_count()
             led_counts.append(count)       
-            discovered_blinksticks.append(stick)
+            found_blinksticks.append(stick)
         
         # Verify we're addressing the same number of LEDs for both sticks.
         led_count = set(led_counts) # Set will deduplicate.
@@ -90,7 +90,7 @@ class BlinkStickViz:
         else:
             print('ERROR - LED Count is NOT equal between Blinksticks: {} - Values should match.'.format(led_count))
             sys.exit(1)
-        return(discovered_blinksticks)
+        return(found_blinksticks)
 
 
     def input_device(self): # i.e. Microphone
@@ -138,7 +138,7 @@ class BlinkStickViz:
                         continue # Skip lines without dots.
                 return(receive_nodes)
         else:
-            print('ERROR - Receive nodes file not found: {}. Please create this file with each receving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
+            print('ERROR - Receive nodes file not found: {}. Please create this file with each receiving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
             sys.exit(1)
             
 
