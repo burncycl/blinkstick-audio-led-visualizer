@@ -45,7 +45,7 @@ class BlinkStickViz:
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
         if self.transmit == True:            
             self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file.
-            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes))
+            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port))
 
         # PyAudio Variables.
         self.device = device
