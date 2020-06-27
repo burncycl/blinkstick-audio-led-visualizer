@@ -125,7 +125,7 @@ On transmitting Pi
 python3 visualizer.py --modes pulse loop --transmit
 ```
 
-Note: Default UDP port 12000
+Note: Utilizes UDP port 12000
 
 ### TODO
 
