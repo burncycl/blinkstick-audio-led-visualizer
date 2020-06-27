@@ -101,6 +101,30 @@ For additional modes of operation reference script readme.
 python3 visualize.py --readme
 ```
 
+### Network Mode Visualizations
+Create receive_nodes.list and populate it with IP addresses. Port is UDP 12000
+
+```
+touch receive_nodes.list
+```
+
+*receive_nodes.list* Example:
+```
+10.3.3.30
+10.3.3.31
+10.3.3.32
+```
+
+On recieving Pi
+```
+python3 visualizer.py --recieve
+```
+
+On transmitting Pi
+```
+python3 visualizer.py --modes pulse loop --transmit
+```
+
 ### TODO
 
 * Implement methods for direct digital input (like an mp3), as opposed to a microphone.
