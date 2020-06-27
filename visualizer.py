@@ -26,11 +26,11 @@ from blinkstick import blinkstick
 import notes_scaled_nosaturation
 from time import sleep, time
 from colorsys import hsv_to_rgb
-import argparse, sys, random
+import argparse, sys, random, pickle
 from os import path
 from threading import Thread
 from socket import *
-import pickle
+import argparse, sys, random, pickle
 
 
 class BlinkStickViz:
