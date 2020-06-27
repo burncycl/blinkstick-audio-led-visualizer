@@ -130,5 +130,5 @@ Note: Utilizes UDP port 12000
 ### TODO
 
 * Implement methods for direct digital input (like an mp3), as opposed to a microphone.
-* Implement passthrough of microphone input to speaker output.
+* Implement passthrough of microphone input to speaker output. Can probably achieve this with JACK?
 * Finish Ansible Automation.
