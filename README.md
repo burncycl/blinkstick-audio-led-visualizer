@@ -18,15 +18,17 @@ It also appears that both of these projects are relatively unmaintained.
 Lastly, I chose to use the Blinkstick because breadboards with voltage logic level converts are frustrating and don't deliver as clean an end result.  
 
 **Features**
-* Working and well documented.
-* Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+. Fine on decent x86 processors.
+* Working code (as of publish date) and well documented.
+* Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+, but fine on decent x86 processors.
 * Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
-* Modularity so new visualizations can be added in with ease as functions.
-* More Object oriented.
+* Modularity - So new visualizations can be added in with ease as functions.
+* Object oriented (more or less).
 
 Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
 ### Hardware
+
+Note: Your implementation might not require all the hardware listed. Just making suggestions for resources.
 
 I don't promise the Amazon links listed will always work, but you can Web Search for said product and find equivalents. 
 
@@ -45,12 +47,16 @@ I don't promise the Amazon links listed will always work, but you can Web Search
   - https://amzn.to/2YzE0S2
 * MicroUSB cord (first cord I tried was cheap crap, and didn't work)
   - https://amzn.to/3idO37p
+* Audio Splitter Cable (useful if you have an input device (Like a cellphone and a speaker. Used in conjunction with USB External Stereo Sound Adapter with Red Microphone input).
+  - https://amzn.to/2BEcmdH 
+* 3.5mm Aux Cord (again, useful if you have an input device (Like a cellphone and a speaker)
+  - https://amzn.to/2YBIQ13
 
 ### Ansible Automated Installation
 
 Want to provision a fleet of Raspberry Pi's with Blinksticks listening via network?
 
-Reference: https://github.com/burncycl/ansible-blinkstick-audio-led-visualizer
+* Reference: https://github.com/burncycl/ansible-blinkstick-audio-led-visualizer
 
 ### Semi-Automated Installation
 
