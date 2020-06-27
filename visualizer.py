@@ -198,7 +198,7 @@ class BlinkStickViz:
 
 
     def random_visualization_handler(self, loop):
-        visualizations = [self.pulse_visualization, self.flash_visualization]
+        visualizations = [self.pulse_visualization, self.flash_visualization] # If you create more visualization functions, add them to this list
         self.wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
         while True:
             self.stop = False # Always start the loop with stop Default to False
