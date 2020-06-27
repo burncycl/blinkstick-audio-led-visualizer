@@ -79,7 +79,7 @@ sudo ./install.sh
 ```
 
 ### Manual Dependency Installation
-Recommend you use the `install.sh` script and use Python Virtual Environments, as opposed to running these commands manually.
+Recommend use `install.sh` script and Python Virtual Environments, as opposed to running these commands manually.
 
 Python
 ```
