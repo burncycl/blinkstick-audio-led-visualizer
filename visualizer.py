@@ -45,8 +45,7 @@ class BlinkStickViz:
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
         if self.transmit == True:            
             self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file.
-            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port))
-
+            
         # PyAudio Variables.
         self.device = device
         self.paud = pa.PyAudio()
@@ -70,6 +69,8 @@ class BlinkStickViz:
         if self.receive == False: # If not in UDP receive mode, go ahead an Init the audio device and read the stream. 
             self.audio_stream = self.input_device() # Init microphone as input source/stream.
             self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
+        if self.transmit == True:
+            print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port)) # Tell us if we're in transmit mode after audio init. Looks better. 
         
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
