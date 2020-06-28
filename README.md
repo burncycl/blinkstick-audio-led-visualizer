@@ -36,18 +36,18 @@ I don't promise the Amazon links listed will always work, but you can Web Search
 
 * Blinkstick Flex (or similar Blinkstick products) 
   - https://www.blinkstick.com/products/blinkstick-flex
-* Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
-  - https://amzn.to/31jSQhg - Can strip these for soldering or find equivalent cable.
-  - https://amzn.to/3fZRHQ8
-  - https://amzn.to/3871a5w
 * Raspberry Pi 3 (or 3 B+) / x86 Computer
   - https://amzn.to/3i8zHVy 
 * WS2812B LED Strip (Important: Blinkstick Flex can only power up to 32 LEDs in it's default configuration. Simply cut the strip to size and solder to micro-controller)
   - https://amzn.to/2NA5u3W
+* Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
+  - https://amzn.to/31jSQhg - Can strip these for soldering or find equivalent cable.
+  - https://amzn.to/3fZRHQ8
+  - https://amzn.to/3871a5w
 * Microphone and/or USB External Stereo Sound Adapter 
   - https://amzn.to/31y4FRp
   - https://amzn.to/2YzE0S2
-* MicroUSB cord (first cord I tried was cheap crap, and didn't work)
+* MicroUSB cord
   - https://amzn.to/3idO37p
 * Audio Splitter Cable (useful if you have an input device, like a cellphone and a speaker. Used in conjunction with USB External Stereo Sound Adapter with Red Microphone input).
   - https://amzn.to/2BEcmdH 
