@@ -36,10 +36,10 @@ I don't promise the Amazon links listed will always work, but you can Web Search
 
 * Blinkstick Flex (or similar Blinkstick products) 
   - https://www.blinkstick.com/products/blinkstick-flex
-* Raspberry Pi 3 (or 3 B+) / x86 Computer
-  - https://amzn.to/3i8zHVy 
 * WS2812B LED Strip (Important: Blinkstick Flex can only power up to 32 LEDs in it's default configuration. Simply cut the strip to size and solder to micro-controller)
   - https://amzn.to/2NA5u3W
+* Raspberry Pi 3 (3 B+ or better) / x86 Computer
+  - https://amzn.to/3i8zHVy 
 * Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
   - https://amzn.to/31jSQhg - Can strip these for soldering or find equivalent cable.
   - https://amzn.to/3fZRHQ8
