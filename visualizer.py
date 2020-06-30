@@ -331,7 +331,6 @@ class BlinkStickViz:
 def readme():
     print('''
 Blinkstick Audio LED Visualizer
-
     Usage:
         -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (List type - Can specify multiple options).
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
@@ -344,7 +343,6 @@ Blinkstick Audio LED Visualizer
         -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
         -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.  
  
-
     Command Examples:
         python3 visualizer.py --modes all                                                        # Switches between all visualization modes at random interval (Default: max=35s min=5s).
         python3 visualizer.py --modes all --max 120 --min 30                                     # Switches between all visualization modes at random configured max and min interval (in seconds).
@@ -392,4 +390,3 @@ if __name__ == '__main__':
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
-
