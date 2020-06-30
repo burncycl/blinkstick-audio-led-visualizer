@@ -35,12 +35,15 @@ import argparse, sys, random, pickle
 
 
 class BlinkStickViz:
-    def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, device=None):
+    def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, inputonly, led_count, device=None):
         # Declare variables, not war.        
-        
+
         # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
+        self.inputonly = inputonly # Facilitates bypassing Blinkstick device, and handling input only device. Default to False.            
         self.transmit = transmit
         self.receive = receive
+        if inputonly == True:
+            self.transmit = True        
         self.receive_address = '0.0.0.0' # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
         self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
@@ -64,8 +67,11 @@ class BlinkStickViz:
         self.stop = False  # Tells visualization to stop running. Facilitates switching to another visualization. Default to False.
 
         # Init Blinkstick, Audio input, and Analyze/Read Audio. Create leds object, so we can loop over in the visualization methods.
-        self.led_count = None # Determine the LED count by querying the stick(s). Populated by self.get_blinksticks() 
-        self.sticks = self.get_blinksticks() #blinkstick.find_first() # Discover Blinkstick Device.        
+        self.led_count = led_count # LED count defaults to 32. Will be determined by self.get_blinksticks() if otherwise. Tune when using Input Only mode.  
+        if self.inputonly == False: # Facilitates bypassing Blinkstick device, and handling input only device.    
+            self.sticks = self.get_blinksticks() # Discover Blinkstick Device.
+        elif inputonly== True:
+            print('Input Only Mode. Bypassing Blinkstick Discovery (i.e. this device is just a microphone).')
         if self.receive == False: # If not in UDP receive mode, go ahead an Init the audio device and read the stream. 
             self.audio_stream = self.input_device() # Init microphone as input source/stream.
             self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
@@ -167,9 +173,10 @@ class BlinkStickViz:
  
     def send_to_stick(self, data):
         if self.transmit == True: # If we're in transmit mode send the led data via UDP.
-            self.udp_transmit(data)
-        for stick in self.sticks:
-            stick.set_led_data(0, data)
+            self.udp_transmit(data)        
+        if self.inputonly == False: # If input only is false, we'll send data to multiple connected Blinkstick Devices.
+            for stick in self.sticks: # Loop over one of more Blinkstick devices sending visualization processed LED data.
+                stick.set_led_data(0, data)
                           
 
     def main(self, modes):
@@ -331,6 +338,7 @@ class BlinkStickViz:
 def readme():
     print('''
 Blinkstick Audio LED Visualizer
+
     Usage:
         -m, --modes          Visualization Modes (required). Options: all, pulse, blink, loop (List type - Can specify multiple options).
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
@@ -342,7 +350,10 @@ Blinkstick Audio LED Visualizer
         -mn, --min           Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
         -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
         -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.  
- 
+        -io, --inputonly     Input Only Mode. Assumes Transmit Mode via UDP. Facilitates device that only listens to input without Blinkstick attached and transmits to other devices. (Default: False).    
+        -lc, --ledcount      Used in conjunction with Input Only, as you need to specify the LED count for the remote devices (Default: 32).
+
+
     Command Examples:
         python3 visualizer.py --modes all                                                        # Switches between all visualization modes at random interval (Default: max=35s min=5s).
         python3 visualizer.py --modes all --max 120 --min 30                                     # Switches between all visualization modes at random configured max and min interval (in seconds).
@@ -351,6 +362,8 @@ Blinkstick Audio LED Visualizer
         python3 visualizer.py --modes pulse loop --sensitivity 1                                 # Example of non-default sound sensitivity adjustment.
         python3 visualizer.py --modes pulse loop --dev 1 --rate 48000 --chunk 4096 --channels 1  # Example of non-default device, Input Device Hz rate, chunk size, and channels.
         python3 visualizer.py --modes pulse loop --transmit                                      # Example of transmit mode.        
+        python3 visualizer.py --modes pulse loop --inputonly                                     # Example of input only mode.
+        python3 visualizer.py --modes pulse loop --inputonly --ledcount                          # Example of input only mode with custom LED count for receiving device.        
     ''')
     sys.exit(0)
 
@@ -369,9 +382,12 @@ if __name__ == '__main__':
     parser.add_argument('-mn', '--min', help='Minimum time between transition (Default: 5s)', default=5)
     parser.add_argument('-tx', '--transmit', help='Transmit Mode via UDP (Default: False)', default=False, action='store_true')
     parser.add_argument('-rx', '--receive', help='Receive Mode via UDP (Default: False)', default=False, action='store_true')    
+    parser.add_argument('-io', '--inputonly', help='Input Only. Bypass Blinkstick (Default: False)', default=False, action='store_true')    
+    parser.add_argument('-lc', '--ledcount', help='LED Count of Receiving Blinksticks. Used with Input Only mode (Default: 32)', default=32)
     args = parser.parse_args()
 
     ## Command line argument handlers
+    print(args.inputonly)
     if args.readme:
         readme()
     # Handle error scenarios. 
@@ -381,12 +397,21 @@ if __name__ == '__main__':
     elif int(args.max) < int(args.min): 
         print('ERROR - Maximum visualization transition interval ({}s) cannot be less than Minimum transition interval ({}s).'.format(args.max, args.min))
         sys.exit(1)
+    elif args.receive == True and args.inputonly == True: 
+        print('ERROR - Input Only does not work in conjunction with Receive mode. Input only is for listening to audio without a Blinkstick attached in Transmit Mode.')
+        sys.exit(1)        
+    # Handle Input Only mode, which turns on Transmit capabilities.
+    elif args.inputonly == True and args.modes is not None:
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
+                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
     # Handle Receive mode.
     elif args.receive == True:
-        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).udp_receive()
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
+                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).udp_receive()
     # Handle Main
     elif args.modes is not None:
-        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, receive=args.receive, device=args.dev).main(modes=args.modes)
+        BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
+                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
