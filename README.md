@@ -25,6 +25,7 @@ Lastly, I chose to use the Blinkstick because breadboards with voltage logic lev
 * Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
 * Modularity - New visualizations can be added in with ease as functions.
 * Object oriented (more or less).
+* Input only mode. Bypasses Blinkstick Discovery, and turns device into just a microphone transmitting via Network.
 
 Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
