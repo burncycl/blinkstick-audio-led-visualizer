@@ -387,7 +387,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     ## Command line argument handlers
-    print(args.inputonly)
     if args.readme:
         readme()
     # Handle error scenarios. 
