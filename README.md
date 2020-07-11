@@ -120,7 +120,7 @@ python3 visualize.py --readme
 
 ### Network Mode Visualizations
 
-### Auto-Discovery
+### Auto Discovery
 If no *receive_nodes.list* file is provided, Auto Discovery will be used.
 * Receive nodes (the one being sent LED visualization information) will Announce via broadcast on port 50000 every 5 seconds.
 * Transmit node (the one with the input device) will listen for broadcast packets on port 50000 from available receive nodes.  
