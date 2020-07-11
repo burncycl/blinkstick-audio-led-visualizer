@@ -174,13 +174,13 @@ class BlinkStickViz:
         discovery_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
         discovery_socket.bind(('', self.auto_discovery_port))
         while 1:
-            data, addr = discovery_socket.recvfrom(self.chunk) # Wait for a packet
+            data, addr = discovery_socket.recvfrom(1024) # Wait for a packet
             decoded_data = pickle.loads(data) # De-Serialize the received data.
             if decoded_data.startswith(self.net_identifier):
                 receive_node_ip = decoded_data.rsplit(' ', 1)[1]
                 if receive_node_ip not in self.receive_nodes: # Update the self.receive_nodes with newly discovered nodes.
                     self.receive_nodes.append(receive_node_ip) # Add node to our list of discovered/known receiving nodes.
-                    self.udp_transmit('acknolwedged') # Tell the receiving node, that we have discovered them, and thus stop broadcasting.
+                    self.udp_transmit('acknowledged') # Tell the receiving node, that we have discovered them, and thus stop broadcasting.
                     
 
 
@@ -456,3 +456,4 @@ if __name__ == '__main__':
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
+
