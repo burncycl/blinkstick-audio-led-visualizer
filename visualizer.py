@@ -83,8 +83,8 @@ class BlinkStickViz:
             self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
         if self.transmit == True: # Tell us if we're in transmit mode after audio init. Looks better.
             print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port))
-            if self.receive_nodes == None:
-                print('Auto Discovery - Awaiting Announcement from network attached Blinkstick dsevices.')
+            if not self.receive_nodes:
+                print('Auto Discovery - Awaiting Announcement from network attached Blinkstick devices.')
         
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
