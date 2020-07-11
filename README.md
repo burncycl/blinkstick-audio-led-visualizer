@@ -23,6 +23,7 @@ Lastly, I chose to use the Blinkstick because breadboards with voltage logic lev
 * Working code (as of publish date) and well documented.
 * Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+, but fine on decent x86 processors.
 * Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
+* Scalability - Support for Auto-Discovery 
 * Modularity - New visualizations can be added in with ease as functions.
 * Object oriented (more or less).
 * Input only mode. Bypasses Blinkstick Discovery, and turns device into just a microphone transmitting via Network.
@@ -118,7 +119,16 @@ python3 visualize.py --readme
 ```
 
 ### Network Mode Visualizations
+### Auto-Discovery
+If no *receive_nodes.list* file is provided, Auto Discovery will be used.
+Transmit node (the one with the input device) will listen for broadcast packets on port 50000 from available receive nodes.  
+Receive nodes (the one being sent LED visualization information) will Announce via broadcast on port 50000 every 5 seconds.
+Once the Trasmit node has discovered a Receive node, it will send an acknowledgement, telling the receive node to stop announcing.
+
+### List provided discovery
+
 On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
+
 
 ```
 touch receive_nodes.list
@@ -133,7 +143,7 @@ Example *receive_nodes.list*
 
 On recieving Pi
 ```
-python3 visualizer.py --recieve
+python3 visualizer.py --receive
 ```
 
 On transmitting Pi
