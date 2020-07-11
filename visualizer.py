@@ -167,8 +167,9 @@ class BlinkStickViz:
             data = '{} {}'.format(self.net_identifier, my_ip)
             data = pickle.dumps(data) # Serialize the data for transmission.
             announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
+            print('Auto Discovery - Announcing to network...')
             sleep(5)
-            print('Announcing to network...')
+            
 
 
     def udp_discovery(self):
