@@ -202,7 +202,7 @@ class BlinkStickViz:
         while 1:
             data = receive_socket.recv(self.chunk)
             decoded_data = pickle.loads(data) # De-Serialize the received data.
-            if decoded_data('acknowledged'): # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+            if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
                 t.do_run = False
                 t.join()
             else:
