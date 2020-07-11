@@ -32,13 +32,17 @@ from os import path
 from threading import Thread
 from socket import *
 import argparse, sys, random, pickle
+import netifaces as ni
 
 
 class BlinkStickViz:
-    def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, inputonly, led_count, device=None):
+    def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, network_interface, inputonly, led_count, device=None):
         # Declare variables, not war.        
 
         # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
+        self.network_interface = network_interface
+        self.auto_discovery_port = 50000
+        self.net_identifier = "blinkstickviz" # Identifier to insure we only talk to compatible devices. 
         self.inputonly = inputonly # Facilitates bypassing Blinkstick device, and handling input only device. Default to False.            
         self.transmit = transmit
         self.receive = receive
@@ -48,7 +52,8 @@ class BlinkStickViz:
         self.receive_port = 12000 # Hard-coded UDP receive/listener port. Adjust this if needed. Didn't bother to make it configurable.
         self.receive_nodes_file = './receive_nodes.list' # Hard-coded filename of receive nodes (IP Addresses) if in transmit mode. List each IP Address on it's own line.  
         if self.transmit == True:            
-            self.receive_nodes = self.get_receive_nodes() # List of receive nodes parsed from self.receive_nodes_file.
+            self.receive_nodes = [] # Empty list of receive nodes updated by self.get_receive_nodes(). Either updated by hard-coded list or auto-discovery (self.udp_discovery())
+            self.get_receive_nodes()
             
         # PyAudio Variables.
         self.device = device
@@ -143,11 +148,41 @@ class BlinkStickViz:
                         receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.                
                     else:
                         continue # Skip lines without dots.
-                return(receive_nodes)
-        else:
-            print('ERROR - Receive nodes file not found: {}. Please create this file with each receiving node IP address listed on it\'s own line.'.format(self.receive_nodes_file))
-            sys.exit(1)
+                self.receive_nodes.append(receive_nodes)
+        else: # If no hard coded IP list is specified, use auto discovery mechanism.
+            print('No Hard-coded IP list provided, Starting Auto Discovery...')
+            Thread(target=self.udp_discovery).start() # Threading facilitates addressing multiple Blinksticks on the same parent device.             
+
             
+    def udp_announce(self):        
+        announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
+        announce_socket.bind(('', 0))
+        announce_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1) # Broadcast socket.
+        try:
+            my_ip = ni.ifaddresses(self.network_interface)[ni.AF_INET][0]['addr']
+        except Exception as e:
+            print('ERROR - Problem with Network Interface. Perhaps you did not define the proper NIC? (Default: eth0)')
+            sys.exit(1)        
+        while 1:
+            data = '{} {}'.format(self.net_identifier, my_ip)
+            data = pickle.dumps(data) # Serialize the data for transmission.
+            announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
+            sleep(5)
+
+
+    def udp_discovery(self):
+        discovery_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
+        discovery_socket.bind(('', self.auto_discovery_port))
+        while 1:
+            data, addr = discovery_socket.recvfrom(self.chunk) # Wait for a packet
+            decoded_data = pickle.loads(data) # De-Serialize the received data.
+            if decoded_data.startswith(self.net_identifier):
+                receive_node_ip = decoded_data.rsplit(' ', 1)[1]
+                if receive_node_ip not in self.receive_nodes: # Update the self.receive_nodes with newly discovered nodes.
+                    self.receive_nodes.append(receive_node_ip) # Add node to our list of discovered/known receiving nodes.
+                    self.udp_transmit('acknolwedged') # Tell the receiving node, that we have discovered them, and thus stop broadcasting.
+                    
+
 
     def udp_transmit(self, data):
         data = pickle.dumps(data) # Serialize the data for transmission.        
@@ -157,15 +192,20 @@ class BlinkStickViz:
 
 
     def udp_receive(self):
+        t = Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via seperate thread. 
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
-        receive_socket = socket(AF_INET, SOCK_DGRAM)
+        receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
         receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
         try:
             receive_socket.bind((self.receive_address, self.receive_port)) 
             while 1:
                 data = receive_socket.recv(self.chunk)
-                decoded_data = pickle.loads(data) # De-Serialize the received data. 
-                self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
+                decoded_data = pickle.loads(data) # De-Serialize the received data.
+                if decoded_data('acknowledged'): # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+                    t.do_run = False
+                    t.join()
+                else:
+                    self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
         except Exception as e:
             print('ERROR - Unable to bind to address - {}'.format(e))
             sys.exit(1)
@@ -174,7 +214,7 @@ class BlinkStickViz:
     def send_to_stick(self, data):
         if self.transmit == True: # If we're in transmit mode send the led data via UDP.
             self.udp_transmit(data)        
-        if self.inputonly == False: # If input only is false, we'll send data to multiple connected Blinkstick Devices.
+        if self.inputonly == False: # If input only is False, we'll send data to multiple connected Blinkstick Devices.
             for stick in self.sticks: # Loop over one of more Blinkstick devices sending visualization processed LED data.
                 stick.set_led_data(0, data)
                           
@@ -344,12 +384,13 @@ Blinkstick Audio LED Visualizer
         -s, --sensitivity    Sensitivity to Sound (Default: 1.3).
         -d, --dev            Input Device Index Id (Default: default device). For device discovery use: find_input_devices.py
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
-        -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).
+        -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).        
         -ch, --channels      Input Device Number of Channels (Default: 2). Likely Alternative set to: 1
         -mx, --max           Maximum time (in seconds) between visualization transition (Default: 35s). # Note: Max and Min can be equal (thus setting a static transition interval).
         -mn, --min           Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
         -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
-        -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.  
+        -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.
+        -if, --interface     Network Interface for receiving data. Facilitates Auto-discovery mechanism (Default: eth0).          
         -io, --inputonly     Input Only Mode. Assumes Transmit Mode via UDP. Facilitates device that only listens to input without Blinkstick attached and transmits to other devices. (Default: False).    
         -lc, --ledcount      Used in conjunction with Input Only, as you need to specify the LED count for the remote devices (Default: 32).
 
@@ -382,6 +423,7 @@ if __name__ == '__main__':
     parser.add_argument('-mn', '--min', help='Minimum time between transition (Default: 5s)', default=5)
     parser.add_argument('-tx', '--transmit', help='Transmit Mode via UDP (Default: False)', default=False, action='store_true')
     parser.add_argument('-rx', '--receive', help='Receive Mode via UDP (Default: False)', default=False, action='store_true')    
+    parser.add_argument('-if', '--interface', help='Network Interface for receiving data (Default: eth0)', default='eth0',)    
     parser.add_argument('-io', '--inputonly', help='Input Only. Bypass Blinkstick (Default: False)', default=False, action='store_true')    
     parser.add_argument('-lc', '--ledcount', help='LED Count of Receiving Blinksticks. Used with Input Only mode (Default: 32)', default=32)
     args = parser.parse_args()
@@ -402,15 +444,15 @@ if __name__ == '__main__':
     # Handle Input Only mode, which turns on Transmit capabilities.
     elif args.inputonly == True and args.modes is not None:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
-                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
+                      receive=args.receive, network_interface=args.interface, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
     # Handle Receive mode.
     elif args.receive == True:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
-                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).udp_receive()
+                      receive=args.receive, network_interface=args.interface, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).udp_receive()
     # Handle Main
     elif args.modes is not None:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
-                      receive=args.receive, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
+                      receive=args.receive, network_interface=args.interface, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).main(modes=args.modes)
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
