@@ -119,13 +119,15 @@ python3 visualize.py --readme
 ```
 
 ### Network Mode Visualizations
+
 ### Auto-Discovery
 If no *receive_nodes.list* file is provided, Auto Discovery will be used.
-Transmit node (the one with the input device) will listen for broadcast packets on port 50000 from available receive nodes.  
-Receive nodes (the one being sent LED visualization information) will Announce via broadcast on port 50000 every 5 seconds.
-Once the Trasmit node has discovered a Receive node, it will send an acknowledgement, telling the receive node to stop announcing.
+* Receive nodes (the one being sent LED visualization information) will Announce via broadcast on port 50000 every 5 seconds.
+* Transmit node (the one with the input device) will listen for broadcast packets on port 50000 from available receive nodes.  
+* Once the Trasmit node has discovered a Receive node, it will send an acknowledgement, telling the receive node to stop announcing.
+* On the transmit node, discovery will continue indefinitely. Thus, you can keep adding devices while a visualation is active.
 
-### List provided discovery
+### List Provided Discovery
 
 On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
 
