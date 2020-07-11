@@ -1,6 +1,6 @@
 ### 2020/06 BuRnCycL
 
-**Blinkstick Audio LED Visualizer**
+**Blinkstick Audio LED Visualizer with Network Support for scalability**
 
 Original Code References (Will Yager & Different55 <burritosaur@protonmail.com>):
  - https://gitgud.io/diff-blinkstick/blinkpulse-visualizer/
@@ -23,10 +23,10 @@ Lastly, I chose to use the Blinkstick because breadboards with voltage logic lev
 * Working code (as of publish date) and well documented.
 * Scalability - Support for running multiple Blinksticks on the same parent device. Note: This runs sub-optimally on Raspberry Pi 3 B+, but fine on decent x86 processors.
 * Scalability - Support for running multiple Blinksticks over multiple parent devices via network (UDP transmit/receive).
-* Scalability - Support for Auto-Discovery 
+* Scalability - Support for Auto Discovery. Automatically discover and utilize multiple Blinkstick devices via UDP Broadcast. 
 * Modularity - New visualizations can be added in with ease as functions.
 * Object oriented (more or less).
-* Input only mode. Bypasses Blinkstick Discovery, and turns device into just a microphone transmitting via Network.
+* Input only mode. Bypasses Blinkstick Discovery, and turn device into just a microphone transmitting via Network.
 
 Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
