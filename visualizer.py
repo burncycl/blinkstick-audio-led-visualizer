@@ -83,6 +83,8 @@ class BlinkStickViz:
             self.audio = self.read_audio(self.audio_stream, num_samples=self.sample_rate) # Read the audio stream.
         if self.transmit == True: # Tell us if we're in transmit mode after audio init. Looks better.
             print('UDP Transmit Mode to {}, on Port: {}'.format(self.receive_nodes, self.receive_port))
+            if self.receive_nodes == None:
+                print('Auto Discovery - Awaiting Announcement from network attached Blinkstick dsevices.')
         
 
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
@@ -166,6 +168,7 @@ class BlinkStickViz:
             sys.exit(1)        
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
+                print('Auto Discovery - Discovered! Stopping Announcement.')
                 break
             else: # Otherwise announce to the network every 5 seconds.
                 data = '{} {}'.format(self.net_identifier, my_ip)
@@ -181,15 +184,15 @@ class BlinkStickViz:
         while 1:
             data, addr = discovery_socket.recvfrom(1024) # Wait for a packet
             decoded_data = pickle.loads(data) # De-Serialize the received data.
-            print(decoded_data)
             if decoded_data.startswith(self.net_identifier):
                 receive_node_ip = decoded_data.rsplit(' ', 1)[1]
                 if receive_node_ip not in self.receive_nodes: # Update the self.receive_nodes with newly discovered nodes.
+                    print('Auto Discovery - Found: {}, on Port: {}'.format(receive_node_ip, self.receive_port))
                     self.receive_nodes.append(receive_node_ip) # Add node to our list of discovered/known receiving nodes. 
                     self.udp_acknowledge(receive_node_ip)
 
 
-    def udp_acknowledge(self, receive_node_ip): # Tell the receiving node, that we have discovered them, and thus stop broadcasting.            
+    def udp_acknowledge(self, receive_node_ip): # Tell the receiving node, that we have discovered them, and thus stop broadcasting.                        
             data = pickle.dumps('acknowledged') # Serialize the data for transmission.
             acknowledge_socket = socket(AF_INET, SOCK_DGRAM)
             acknowledge_socket.sendto(data,(receive_node_ip, self.receive_port))
