@@ -168,6 +168,7 @@ class BlinkStickViz:
             data = pickle.dumps(data) # Serialize the data for transmission.
             announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
             sleep(5)
+            print('Announcing to network...')
 
 
     def udp_discovery(self):
