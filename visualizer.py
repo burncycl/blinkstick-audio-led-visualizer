@@ -46,6 +46,7 @@ class BlinkStickViz:
         self.inputonly = inputonly # Facilitates bypassing Blinkstick device, and handling input only device. Default to False.            
         self.transmit = transmit
         self.receive = receive
+        self.acknowledged = False # By default we haven't been acknowledged, as a discovered device.
         if inputonly == True:
             self.transmit = True        
         self.receive_address = '0.0.0.0' # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
@@ -164,11 +165,14 @@ class BlinkStickViz:
             print('ERROR - Problem with Network Interface. Perhaps you did not define the proper NIC? (Default: eth0)')
             sys.exit(1)        
         while 1:
-            data = '{} {}'.format(self.net_identifier, my_ip)
-            data = pickle.dumps(data) # Serialize the data for transmission.
-            announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-            print('Auto Discovery - Announcing to network...')
-            sleep(5)
+            if self.acknowledged == True: # If we've been acknowledged, stop announcing.
+                break
+            else: # Otherwise announce to the network every 5 seconds.
+                data = '{} {}'.format(self.net_identifier, my_ip)
+                data = pickle.dumps(data) # Serialize the data for transmission.
+                announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
+                print('Auto Discovery - Announcing to network...')
+                sleep(5)
             
 
 
@@ -191,10 +195,10 @@ class BlinkStickViz:
         for receive_ip in self.receive_nodes: # Loop over the list of hosts.
             transmit_socket = socket(AF_INET, SOCK_DGRAM)
             transmit_socket.sendto(data,(receive_ip, self.receive_port))
-
+        
 
     def udp_receive(self):
-        t = Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via seperate thread. 
+        Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.       
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
         receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
@@ -204,8 +208,7 @@ class BlinkStickViz:
             data = receive_socket.recv(self.chunk)
             decoded_data = pickle.loads(data) # De-Serialize the received data.
             if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
-                t.do_run = False
-                t.join()
+                self.acknowledged = True
             else:
                 self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
 #         except Exception as e:
