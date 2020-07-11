@@ -197,19 +197,19 @@ class BlinkStickViz:
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
         receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
-        try:
-            receive_socket.bind((self.receive_address, self.receive_port)) 
-            while 1:
-                data = receive_socket.recv(self.chunk)
-                decoded_data = pickle.loads(data) # De-Serialize the received data.
-                if decoded_data('acknowledged'): # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
-                    t.do_run = False
-                    t.join()
-                else:
-                    self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
-        except Exception as e:
-            print('ERROR - Unable to bind to address - {}'.format(e))
-            sys.exit(1)
+#         try:
+        receive_socket.bind((self.receive_address, self.receive_port)) 
+        while 1:
+            data = receive_socket.recv(self.chunk)
+            decoded_data = pickle.loads(data) # De-Serialize the received data.
+            if decoded_data('acknowledged'): # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+                t.do_run = False
+                t.join()
+            else:
+                self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
+#         except Exception as e:
+#             print('ERROR - Unable to bind to address - {}'.format(e))
+#             sys.exit(1)
  
  
     def send_to_stick(self, data):
