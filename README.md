@@ -127,6 +127,8 @@ If no *receive_nodes.list* file is provided, Auto Discovery will be used.
 * Once the Trasmit node has discovered a Receive node, it will send an acknowledgement, telling the receive node to stop announcing.
 * On the transmit node, discovery will continue indefinitely. Thus, you can keep adding devices while a visualation is active.
 
+Note: Utilizes port 50000 for discovery
+
 ### List Provided Discovery
 
 On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
@@ -153,7 +155,7 @@ On transmitting Pi
 python3 visualizer.py --modes pulse loop --transmit
 ```
 
-Note: Utilizes UDP port 12000
+Note: Utilizes UDP port 12000 for data communication
 
 ### TODO
 
