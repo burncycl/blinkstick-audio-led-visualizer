@@ -46,7 +46,8 @@ class BlinkStickViz:
         self.inputonly = inputonly # Facilitates bypassing Blinkstick device, and handling input only device. Default to False.            
         self.transmit = transmit
         self.receive = receive
-        self.acknowledged = False # By default we haven't been acknowledged, as a discovered device.
+        self.discovered = False # By default we haven't been discovered. This allows us to continue to announce, but at longer interval.
+        self.acknowledged = False # By default we haven't been acknowledged, as a discovered device.        
         if inputonly == True:
             self.transmit = True        
         self.receive_address = '0.0.0.0' # Hard-coded bind to 0.0.0.0 interface. This may need to be adjusted?
@@ -160,9 +161,16 @@ class BlinkStickViz:
 
             
     def udp_announce(self):        
-        announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
-        announce_socket.bind(('', 0))
-        announce_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1) # Broadcast socket.
+        # Time between announcements based on whether we've been acknowledged.
+        short_announce = 2
+        long_announce = 60
+        try:        
+            announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
+            announce_socket.bind(('', 0))
+            announce_socket.setsockopt(SOL_SOCKET, SO_BROADCAST, 1) # Broadcast socket.
+        except Exception as e:
+            print('ERROR - Unable to bind to address - {}'.format(e))
+            sys.exit(1)
         try:
             my_ip = ni.ifaddresses(self.network_interface)[ni.AF_INET][0]['addr']
         except Exception as e:
@@ -170,14 +178,16 @@ class BlinkStickViz:
             sys.exit(1)        
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
-                print('Auto Discovery - Discovered! Stopped Announcing.')
-                break
+                print('Auto Discovery - Discovered! Announcing every {}s.'.format(long_announce))
             else: # Otherwise announce to the network every 5 seconds.
                 data = '{} {}'.format(self.net_identifier, my_ip)
                 data = pickle.dumps(data) # Serialize the data for transmission.
                 announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
                 print('Auto Discovery - Announcing to network...')
-                sleep(5)
+                if self.discovered == False:                    
+                    sleep(short_announce)
+                elif self.discovered == True:
+                    sleep(long_announce)
             
 
     def udp_discovery(self):
@@ -214,20 +224,22 @@ class BlinkStickViz:
     def udp_receive(self):
         Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.       
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
-        receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
-        receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
-        try:
-            receive_socket.bind((self.receive_address, self.receive_port)) 
-            while 1:
-                data = receive_socket.recv(self.chunk)
-                decoded_data = pickle.loads(data) # De-Serialize the received data.
-                if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
-                    self.acknowledged = True
-                else:
-                    self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
+        try:    
+            receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
+            receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
+            receive_socket.bind((self.receive_address, self.receive_port))
         except Exception as e:
             print('ERROR - Unable to bind to address - {}'.format(e))
             sys.exit(1)
+             
+        while 1:
+            data = receive_socket.recv(self.chunk)
+            decoded_data = pickle.loads(data) # De-Serialize the received data.
+            if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+                self.acknowledged = True
+                self.discovered = True
+            else:
+                self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
  
  
     def send_to_stick(self, data):
