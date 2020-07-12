@@ -46,7 +46,6 @@ class BlinkStickViz:
         self.inputonly = inputonly # Facilitates bypassing Blinkstick device, and handling input only device. Default to False.            
         self.transmit = transmit
         self.receive = receive
-        self.discovered = False # By default we haven't been discovered. This allows us to continue to announce, but at longer interval.
         self.acknowledged = False # By default we haven't been acknowledged, as a discovered device.        
         if inputonly == True:
             self.transmit = True        
@@ -178,16 +177,16 @@ class BlinkStickViz:
             sys.exit(1)        
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
-                print('Auto Discovery - Discovered! Announcing every {}s.'.format(long_announce))
-            else: # Otherwise announce to the network every 5 seconds.
-                data = '{} {}'.format(self.net_identifier, my_ip)
-                data = pickle.dumps(data) # Serialize the data for transmission.
-                announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-                print('Auto Discovery - Announcing to network...')
-                if self.discovered == False:                    
-                    sleep(short_announce)
-                elif self.discovered == True:
-                    sleep(long_announce)
+                print('Auto Discovery - Discovered! Announcing every {}s...'.format(long_announce))
+            if self.acknowledged == False:
+                print('Auto Discovery - Announcing to network every {}s...'.format(short_announce))
+            data = '{} {}'.format(self.net_identifier, my_ip)
+            data = pickle.dumps(data) # Serialize the data for transmission.
+            announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
+            if self.acknowledged == False:                    
+                sleep(short_announce)
+            elif self.acknowledged == True:
+                sleep(long_announce)
             
 
     def udp_discovery(self):
@@ -235,9 +234,8 @@ class BlinkStickViz:
         while 1:
             data = receive_socket.recv(self.chunk)
             decoded_data = pickle.loads(data) # De-Serialize the received data.
-            if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+            if 'acknowledged' in decoded_data:  
                 self.acknowledged = True
-                self.discovered = True
             else:
                 self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
  
@@ -247,7 +245,11 @@ class BlinkStickViz:
             self.udp_transmit(data)        
         if self.inputonly == False: # If input only is False, we'll send data to multiple connected Blinkstick Devices.
             for stick in self.sticks: # Loop over one of more Blinkstick devices sending visualization processed LED data.
-                stick.set_led_data(0, data)
+                try:
+                    stick.set_led_data(0, data)
+                except Exception as e:
+                    print('ERROR - Blinkstick communication error - {}'.format(e))
+                    self.get_blinksticks() # Try to re-init Blinkstick communication.
                           
 
     def main(self, modes):
