@@ -200,11 +200,12 @@ class BlinkStickViz:
 
     def udp_transmit(self, data):
         data = pickle.dumps(data) # Serialize the data for transmission.        
-        print(len(self.receive_nodes))
-        if len(self.receive_nodes) > 0:
-            for receive_ip in self.receive_nodes: # Loop over the list of hosts.
+        for receive_ip in self.receive_nodes: # Loop over the list of hosts.
+            try:
                 transmit_socket = socket(AF_INET, SOCK_DGRAM)
                 transmit_socket.sendto(data,(receive_ip, self.receive_port))
+            except Exception as e:
+                print('ERROR - Unable to communicate to receive node {} - {}'.format(receive_ip, e))
                     
 
     def udp_receive(self):
