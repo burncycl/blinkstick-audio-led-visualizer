@@ -152,9 +152,11 @@ class BlinkStickViz:
                     else:
                         continue # Skip lines without dots.
                 self.receive_nodes.append(receive_nodes)
+            for receive_node in receive_nodes:
+                self.udp_acknowledge(receive_node)
         else: # If no hard coded IP list is specified, use auto discovery mechanism.
             print('No Hard-coded IP list provided, Starting Auto Discovery...')
-            Thread(target=self.udp_discovery).start() # Threading facilitates addressing multiple Blinksticks on the same parent device.             
+            Thread(target=self.udp_discovery).start() # Threaded Start UDP Discovery.             
 
             
     def udp_announce(self):        
@@ -168,7 +170,7 @@ class BlinkStickViz:
             sys.exit(1)        
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
-                print('Auto Discovery - Discovered! Stopping Announcement.')
+                print('Auto Discovery - Discovered! Stopped Announcing.')
                 break
             else: # Otherwise announce to the network every 5 seconds.
                 data = '{} {}'.format(self.net_identifier, my_ip)
@@ -205,7 +207,7 @@ class BlinkStickViz:
                 transmit_socket = socket(AF_INET, SOCK_DGRAM)
                 transmit_socket.sendto(data,(receive_ip, self.receive_port))
             except Exception as e:
-                print('ERROR - Unable to communicate to receive node {} - {}'.format(receive_ip, e))
+                print('ERROR - Unable to communicate to receive node: {} - {}'.format(receive_ip, e))
                 sys.exit(1)
                     
 
@@ -214,18 +216,18 @@ class BlinkStickViz:
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
         receive_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, self.chunk) # Set receive buffer size to self.chunk. Prevents visual lag.
-#         try:
-        receive_socket.bind((self.receive_address, self.receive_port)) 
-        while 1:
-            data = receive_socket.recv(self.chunk)
-            decoded_data = pickle.loads(data) # De-Serialize the received data.
-            if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
-                self.acknowledged = True
-            else:
-                self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
-#         except Exception as e:
-#             print('ERROR - Unable to bind to address - {}'.format(e))
-#             sys.exit(1)
+        try:
+            receive_socket.bind((self.receive_address, self.receive_port)) 
+            while 1:
+                data = receive_socket.recv(self.chunk)
+                decoded_data = pickle.loads(data) # De-Serialize the received data.
+                if 'acknowledged' in decoded_data: # If we receive an acknowledgement of discovery. Cleanly stop the announcing thread. 
+                    self.acknowledged = True
+                else:
+                    self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
+        except Exception as e:
+            print('ERROR - Unable to bind to address - {}'.format(e))
+            sys.exit(1)
  
  
     def send_to_stick(self, data):
@@ -403,7 +405,7 @@ Blinkstick Audio LED Visualizer
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).        
         -ch, --channels      Input Device Number of Channels (Default: 2). Likely Alternative set to: 1
-        -mx, --max           Maximum time (in seconds) between visualization transition (Default: 35s). # Note: Max and Min can be equal (thus setting a static transition interval).
+        -mx, --max           Maximum time (in seconds) between visualization transition (Default: 20s). # Note: Max and Min can be equal (thus setting a static transition interval).
         -mn, --min           Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
         -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
         -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.
@@ -436,7 +438,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
     parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)
     parser.add_argument('-ch', '--channels', help='Input Device Number of Channels (Default: 2)', default=2)
-    parser.add_argument('-mx', '--max', help='Maximum time between transition (Default: 35s)', default=35)
+    parser.add_argument('-mx', '--max', help='Maximum time between transition (Default: 20s)', default=20)
     parser.add_argument('-mn', '--min', help='Minimum time between transition (Default: 5s)', default=5)
     parser.add_argument('-tx', '--transmit', help='Transmit Mode via UDP (Default: False)', default=False, action='store_true')
     parser.add_argument('-rx', '--receive', help='Receive Mode via UDP (Default: False)', default=False, action='store_true')    
