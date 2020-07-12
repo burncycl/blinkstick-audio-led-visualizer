@@ -200,11 +200,12 @@ class BlinkStickViz:
 
     def udp_transmit(self, data):
         data = pickle.dumps(data) # Serialize the data for transmission.        
+        print(len(self.receive_nodes))
         if len(self.receive_nodes) > 0:
             for receive_ip in self.receive_nodes: # Loop over the list of hosts.
                 transmit_socket = socket(AF_INET, SOCK_DGRAM)
                 transmit_socket.sendto(data,(receive_ip, self.receive_port))
-        
+                    
 
     def udp_receive(self):
         Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.       
