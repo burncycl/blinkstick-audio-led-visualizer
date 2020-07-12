@@ -206,6 +206,7 @@ class BlinkStickViz:
                 transmit_socket.sendto(data,(receive_ip, self.receive_port))
             except Exception as e:
                 print('ERROR - Unable to communicate to receive node {} - {}'.format(receive_ip, e))
+                sys.exit(1)
                     
 
     def udp_receive(self):
