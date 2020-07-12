@@ -38,7 +38,7 @@ import netifaces as ni
 class BlinkStickViz:
     def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, network_interface, inputonly, led_count, device=None):
         # Declare variables, not war.        
-
+        sys.stdout.flush()
         # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
         self.network_interface = network_interface
         self.auto_discovery_port = 50000
@@ -145,15 +145,15 @@ class BlinkStickViz:
         if path.isfile(self.receive_nodes_file):
             with open(self.receive_nodes_file, 'r+') as f:
                 ip_addresses = f.readlines()
-                receive_nodes = []
                 for ip_address in ip_addresses:
                     if '.' in ip_address: # Chuck any line that doesn't have a dot in it (i.e. an IP address format 10.9.9.X). 
-                        receive_nodes.append(ip_address.rstrip('\n')) # Append IP to list of receive nodes. Remove newline.                
+                        ip_address = ip_address.rstrip('\n')
+                        self.receive_nodes.append(ip_address) # Append IP to list of receive nodes. Remove newline.
+                        self.udp_acknowledge(ip_address)                
                     else:
                         continue # Skip lines without dots.
-                self.receive_nodes.append(receive_nodes)
-            for receive_node in receive_nodes:
-                self.udp_acknowledge(receive_node)
+
+                
         else: # If no hard coded IP list is specified, use auto discovery mechanism.
             print('No Hard-coded IP list provided, Starting Auto Discovery...')
             Thread(target=self.udp_discovery).start() # Threaded Start UDP Discovery.             
@@ -201,13 +201,13 @@ class BlinkStickViz:
         
 
     def udp_transmit(self, data):
-        data = pickle.dumps(data) # Serialize the data for transmission.        
-        for receive_ip in self.receive_nodes: # Loop over the list of hosts.
+        data = pickle.dumps(data) # Serialize the data for transmission.
+        for receive_node in self.receive_nodes: # Loop over the list of hosts.
             try:
                 transmit_socket = socket(AF_INET, SOCK_DGRAM)
-                transmit_socket.sendto(data,(receive_ip, self.receive_port))
+                transmit_socket.sendto(data,(receive_node, self.receive_port))
             except Exception as e:
-                print('ERROR - Unable to communicate to receive node: {} - {}'.format(receive_ip, e))
+                print('ERROR - Unable to communicate to Receive Node: {} - {}'.format(receive_node, e))
                 sys.exit(1)
                     
 
