@@ -38,7 +38,7 @@ import netifaces as ni
 class BlinkStickViz:
     def __init__(self, sensitivity, rate, chunk, channels, max_int, min_int, transmit, receive, network_interface, inputonly, led_count, device=None):
         # Declare variables, not war.        
-        sys.stdout.flush()
+
         # Network modes for remote Blinkstick communication. By default, both transmit and receive modes set to False.
         self.network_interface = network_interface
         self.auto_discovery_port = 50000
