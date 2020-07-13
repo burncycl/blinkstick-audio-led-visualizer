@@ -254,7 +254,7 @@ class BlinkStickViz:
                     stick.set_led_data(0, data)
                 except Exception as e:
                     print('ERROR - Blinkstick communication error - {}'.format(e))
-                    self.get_blinksticks() # Try to re-init Blinkstick communication when failures occur. This is due to bugs in pyusb lib.
+                    self.get_blinksticks() # Try to re-init Blinkstick communication when failures occur. This is due to bugs in pyusb library.
                           
 
     def main(self, modes):
