@@ -175,7 +175,7 @@ class BlinkStickViz:
         
         # Time between announcements based on whether we've been acknowledged.
         short_announce_interval = 2
-        long_announce_interval = 60
+        long_announce_interval = 30
 
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
@@ -219,10 +219,14 @@ class BlinkStickViz:
             except Exception as e:
                 print('ERROR - Unable to communicate to Receive Node: {} - {}'.format(receive_node, e))
                 sys.exit(1)
-                    
 
-    def udp_receive(self):
-        Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.       
+
+    def udp_receive_handler(self):
+        Thread(target=self.udp_receive).start() # UDP Receive Mode data on separate thread.
+        Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.        
+
+
+    def udp_receive(self):               
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
         try:    
             receive_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
@@ -250,7 +254,7 @@ class BlinkStickViz:
                     stick.set_led_data(0, data)
                 except Exception as e:
                     print('ERROR - Blinkstick communication error - {}'.format(e))
-                    self.get_blinksticks() # Try to re-init Blinkstick communication.
+                    self.get_blinksticks() # Try to re-init Blinkstick communication when failures occur. This is due to bugs in pyusb lib.
                           
 
     def main(self, modes):
@@ -482,7 +486,7 @@ if __name__ == '__main__':
     # Handle Receive mode.
     elif args.receive == True:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
-                      receive=args.receive, network_interface=args.interface, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).udp_receive()
+                      receive=args.receive, network_interface=args.interface, inputonly=args.inputonly, led_count=args.ledcount, device=args.dev).udp_receive_handler()
     # Handle Main
     elif args.modes is not None:
         BlinkStickViz(sensitivity=args.sensitivity, rate=args.rate, chunk=args.chunk, channels=args.channels, max_int=args.max, min_int=args.min, transmit=args.transmit, 
