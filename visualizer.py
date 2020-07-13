@@ -424,7 +424,7 @@ Blinkstick Audio LED Visualizer
         -r, --rate           Input Device Hz Rate (Default: 44100). Alternatively set to: 48000
         -c, --chunk          Input Device Frames per buffer Chunk Size (Default: 1024).        
         -ch, --channels      Input Device Number of Channels (Default: 2). Likely Alternative set to: 1
-        -mx, --max           Maximum time (in seconds) between visualization transition (Default: 20s). # Note: Max and Min can be equal (thus setting a static transition interval).
+        -mx, --max           Maximum time (in seconds) between visualization transition (Default: 15s). # Note: Max and Min can be equal (thus setting a static transition interval).
         -mn, --min           Minimum time (in seconds) between visualization transition (Default: 5s).  #       However, Max cannot be less than Min.
         -tx, --transmit      Transmit Mode via UDP (Default: False). Uses file based (./receive_nodes.list) list of each IP Addresses on own line to send Blinkstick data.
         -rx, --receive       Receive Mode via UDP (Default: False). Listens on UDP Port 12000. Bypasses listening to input device (i.e. Microphone). Displays what was sent.
@@ -434,7 +434,7 @@ Blinkstick Audio LED Visualizer
 
 
     Command Examples:
-        python3 visualizer.py --modes all                                                        # Switches between all visualization modes at random interval (Default: max=35s min=5s).
+        python3 visualizer.py --modes all                                                        # Switches between all visualization modes at random interval (Default: max=15s min=5s).
         python3 visualizer.py --modes all --max 120 --min 30                                     # Switches between all visualization modes at random configured max and min interval (in seconds).
         python3 visualizer.py --modes pulse loop                                                 # Example of a targeted mode selection. Personal favorite visualization settings.
         python3 visualizer.py --modes flash pulse                                                # Example of a targeted mode selection.
@@ -457,7 +457,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--rate', help='Input Device Hz Rate (Default: 44100)', default=44100)
     parser.add_argument('-c', '--chunk', help='Input Device Frames per buffer Chunk Size (Default: 1024)', default=1024)
     parser.add_argument('-ch', '--channels', help='Input Device Number of Channels (Default: 2)', default=2)
-    parser.add_argument('-mx', '--max', help='Maximum time between transition (Default: 20s)', default=20)
+    parser.add_argument('-mx', '--max', help='Maximum time between transition (Default: 15s)', default=15)
     parser.add_argument('-mn', '--min', help='Minimum time between transition (Default: 5s)', default=5)
     parser.add_argument('-tx', '--transmit', help='Transmit Mode via UDP (Default: False)', default=False, action='store_true')
     parser.add_argument('-rx', '--receive', help='Receive Mode via UDP (Default: False)', default=False, action='store_true')    
