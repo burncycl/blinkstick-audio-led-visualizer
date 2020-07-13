@@ -161,8 +161,7 @@ class BlinkStickViz:
             
     def udp_announce(self):        
         # Time between announcements based on whether we've been acknowledged.
-        short_announce = 2
-        long_announce = 60
+        announce_interval = 2
         try:        
             announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
             announce_socket.bind(('', 0))
@@ -177,16 +176,14 @@ class BlinkStickViz:
             sys.exit(1)        
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
-                print('Auto Discovery - Discovered! Announcing every {}s...'.format(long_announce))
-            if self.acknowledged == False:
-                print('Auto Discovery - Announcing to network every {}s...'.format(short_announce))
+                print('Auto Discovery - Discovered! Stopped Announcing.')
+                break
+            else: 
+                print('Auto Discovery - Announcing to network every {}s...'.format(announce_interval))
             data = '{} {}'.format(self.net_identifier, my_ip)
             data = pickle.dumps(data) # Serialize the data for transmission.
             announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-            if self.acknowledged == False:                    
-                sleep(short_announce)
-            elif self.acknowledged == True:
-                sleep(long_announce)
+            sleep(announce_interval)
             
 
     def udp_discovery(self):
