@@ -159,9 +159,7 @@ class BlinkStickViz:
             Thread(target=self.udp_discovery).start() # Threaded Start UDP Discovery.             
 
             
-    def udp_announce(self):        
-        # Time between announcements based on whether we've been acknowledged.
-        announce_interval = 2
+    def udp_announce(self):                
         try:        
             announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
             announce_socket.bind(('', 0))
@@ -174,16 +172,23 @@ class BlinkStickViz:
         except Exception as e:
             print('ERROR - Problem with Network Interface. Perhaps you did not define the proper NIC? (Default: eth0)')
             sys.exit(1)        
+        
+        # Time between announcements based on whether we've been acknowledged.
+        short_announce_interval = 2
+        long_announce_interval = 60
+
         while 1:
             if self.acknowledged == True: # If we've been acknowledged, stop announcing.
-                print('Auto Discovery - Discovered! Stopped Announcing.')
-                break
-            else: 
-                print('Auto Discovery - Announcing to network every {}s...'.format(announce_interval))
+                print('Auto Discovery - Discovered! Announcing to network every {}s...'.format(long_announce_interval))
+                sleep(long_announce_interval)
+            elif self.acknowledged == False:
+                print('Auto Discovery - Announcing to network every {}s...'.format(short_announce_interval))
+                sleep(short_announce_interval)
+            # Perform Announcement.
             data = '{} {}'.format(self.net_identifier, my_ip)
             data = pickle.dumps(data) # Serialize the data for transmission.
             announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-            sleep(announce_interval)
+
             
 
     def udp_discovery(self):
