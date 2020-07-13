@@ -188,7 +188,6 @@ class BlinkStickViz:
             data = '{} {}'.format(self.net_identifier, my_ip)
             data = pickle.dumps(data) # Serialize the data for transmission.
             announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-
             
 
     def udp_discovery(self):
@@ -202,7 +201,7 @@ class BlinkStickViz:
                 if receive_node_ip not in self.receive_nodes: # Update the self.receive_nodes with newly discovered nodes.
                     print('Auto Discovery - Found: {}, on Port: {}'.format(receive_node_ip, self.receive_port))
                     self.receive_nodes.append(receive_node_ip) # Add node to our list of discovered/known receiving nodes. 
-                    self.udp_acknowledge(receive_node_ip)
+                self.udp_acknowledge(receive_node_ip)
 
 
     def udp_acknowledge(self, receive_node_ip): # Tell the receiving node, that we have discovered them, and thus stop broadcasting.                        
