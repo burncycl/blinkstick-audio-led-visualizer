@@ -132,7 +132,7 @@ Note: Utilizes port 50000 for discovery
 
 ### List Provided Discovery
 
-On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone)), Create *receive_nodes.list* and populate it with IP addresses.
+On transmitting Pi (i.e. the one that is listening to the Input Device (e.g. Microphone), Create *receive_nodes.list* and populate it with IP addresses.
 
 
 ```
