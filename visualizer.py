@@ -86,7 +86,6 @@ class BlinkStickViz:
             if len(self.receive_nodes) == 0:
                 print('Auto Discovery - Awaiting Announcement from network attached Blinkstick devices.')
         
-
     # Utilize multiple Blinksticks on the same parent device. Note: This won't run well on Raspberry Pi. Beefer CPU required.
     def get_blinksticks(self):
         found_blinksticks = []
@@ -106,7 +105,6 @@ class BlinkStickViz:
             print('ERROR - LED Count is NOT equal between Blinksticks: {} - Values should match.'.format(led_count))
             sys.exit(1)
         return(found_blinksticks)
-
 
     def input_device(self): # i.e. Microphone
         if self.device is not None: # Use non-default device.
@@ -128,7 +126,6 @@ class BlinkStickViz:
                 )
         return(audio_stream)
 
-
     # Convert the audio data to numbers, num_samples at a time.
     def read_audio(self, audio_stream, num_samples):
         while True:
@@ -140,7 +137,6 @@ class BlinkStickViz:
             samples_r = samples[1::2]
             yield samples_l, samples_r
 
-
     def get_receive_nodes(self):
         if path.isfile(self.receive_nodes_file):
             with open(self.receive_nodes_file, 'r+') as f:
@@ -151,14 +147,11 @@ class BlinkStickViz:
                         self.receive_nodes.append(ip_address) # Append IP to list of receive nodes. Remove newline.
                         self.udp_acknowledge(ip_address)                
                     else:
-                        continue # Skip lines without dots.
-
-                
+                        continue # Skip lines without dots.              
         else: # If no hard coded IP list is specified, use auto discovery mechanism.
             print('No Hard-coded IP list provided, Starting Auto Discovery...')
             Thread(target=self.udp_discovery).start() # Threaded Start UDP Discovery.             
-
-            
+          
     def udp_announce(self):                
         try:        
             announce_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
@@ -187,8 +180,7 @@ class BlinkStickViz:
             # Perform Announcement.
             data = '{} {}'.format(self.net_identifier, my_ip)
             data = pickle.dumps(data) # Serialize the data for transmission.
-            announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))
-            
+            announce_socket.sendto(data, ('<broadcast>', self.auto_discovery_port))          
 
     def udp_discovery(self):
         discovery_socket = socket(AF_INET, SOCK_DGRAM) # Create UDP socket.
@@ -203,13 +195,11 @@ class BlinkStickViz:
                     self.receive_nodes.append(receive_node_ip) # Add node to our list of discovered/known receiving nodes. 
                 self.udp_acknowledge(receive_node_ip)
 
-
     def udp_acknowledge(self, receive_node_ip): # Tell the receiving node, that we have discovered them, and thus stop broadcasting.                        
             data = pickle.dumps('acknowledged') # Serialize the data for transmission.
             acknowledge_socket = socket(AF_INET, SOCK_DGRAM)
             acknowledge_socket.sendto(data,(receive_node_ip, self.receive_port))
         
-
     def udp_transmit(self, data):
         data = pickle.dumps(data) # Serialize the data for transmission.
         for receive_node in self.receive_nodes: # Loop over the list of hosts.
@@ -220,11 +210,9 @@ class BlinkStickViz:
                 print('ERROR - Unable to communicate to Receive Node: {} - {}'.format(receive_node, e))
                 sys.exit(1)
 
-
     def udp_receive_handler(self):
         Thread(target=self.udp_receive).start() # UDP Receive Mode data on separate thread.
         Thread(target=self.udp_announce).start() # UDP Broadcast announce we're on the network and ready to receive data via separate thread.        
-
 
     def udp_receive(self):               
         print('UDP Receive Mode. Listening on: {}, Port: {}'.format(self.receive_address, self.receive_port))
@@ -243,8 +231,7 @@ class BlinkStickViz:
                 self.acknowledged = True
             else:
                 self.send_to_stick(decoded_data) # Send the data to our Blinksticks.
- 
- 
+  
     def send_to_stick(self, data):
         if self.transmit == True: # If we're in transmit mode send the led data via UDP.
             self.udp_transmit(data)        
@@ -256,7 +243,6 @@ class BlinkStickViz:
                     print('ERROR - Blinkstick communication error - {}'.format(e))
                     self.get_blinksticks() # Try to re-init Blinkstick communication when failures occur. This is due to bugs in pyusb library.
                           
-
     def main(self, modes):
         # Start with more complex conditional for the mode and move to simpler.
         if 'all' in modes:
@@ -282,7 +268,6 @@ class BlinkStickViz:
             print('Flash only.')
             self.flash_visualization()
 
-
     def random_visualization_handler(self, loop):
         visualizations = [self.pulse_visualization, self.flash_visualization] # If you create more visualization functions, add them to this list.
         wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
@@ -305,10 +290,8 @@ class BlinkStickViz:
             t.join()
             wait_interval = random.randint(self.wait_interval_min, self.wait_interval_max)
 
-
     def led_data(self):        
         return(notes_scaled_nosaturation.process(self.audio, num_leds=self.led_count, num_samples=self.sample_rate, sample_rate=self.rate, sensitivity=self.sensitivity)) # Return the processed audio stream to the visualizer functions.
-
 
     def pulse_visualization(self):
         leds = self.led_data()
@@ -354,7 +337,6 @@ class BlinkStickViz:
             self.send_to_stick(finaldata)
             if self.stop == True: # Handle stopping the thread, so another visualization can be executed.
                 break
-
 
     def flash_visualization(self):
         leds = self.led_data()
@@ -411,6 +393,7 @@ class BlinkStickViz:
             last_frame = frame
             if self.stop == True: # Handle stopping the thread, so another visualization can be executed.
                 break
+
 
 
 def readme():
@@ -494,4 +477,3 @@ if __name__ == '__main__':
     else:
         print('README: python3 visualizer.py -readme')
         sys.exit(0)
-
