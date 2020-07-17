@@ -29,7 +29,7 @@ Lastly, I chose to use the Blinkstick because breadboards with voltage logic lev
 * Object oriented (more or less).
 * Input only mode. Bypasses Blinkstick Discovery, and turn device into just a microphone transmitting via Network.
 
-Tested working on Raspberry Pi 3 B+ with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
+Tested working on Raspberry Pi 3 B+ & Raspberry Pi Zero W with Raspios Buster Lite (ARM) or Ubuntu 18.04 (x86).
 
 ### Hardware
 
@@ -41,8 +41,9 @@ I don't promise the Amazon links listed will always work, but you can Web Search
   - https://www.blinkstick.com/products/blinkstick-flex
 * WS2812B LED Strip (Important: Blinkstick Flex can only power up to 32 LEDs in it's default configuration. Simply cut the strip to size and solder to micro-controller)
   - https://amzn.to/2NA5u3W
-* Raspberry Pi 3 (3 B+ or better) / x86 Computer
+* Raspberry Pi 3 (3 B+ or better) / Raspberry Pi Zero W / x86 Computer
   - https://amzn.to/3i8zHVy 
+  - https://amzn.to/30B4y5t
 * Electrial Wire & Soldering Kit (Blinkstick also sells pre-soldered Kits with LEDs) + Solder
   - https://amzn.to/31jSQhg - Can strip these for soldering or find equivalent cable.
   - https://amzn.to/3fZRHQ8
