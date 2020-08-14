@@ -50,6 +50,7 @@ I don't promise the Amazon links listed will always work, but you can Web Search
   - https://amzn.to/3871a5w
 * Microphone and/or USB External Stereo Sound Adapter 
   - https://amzn.to/31y4FRp
+  - https://amzn.to/2DU35Qf 
   - https://amzn.to/2YzE0S2
 * MicroUSB cord
   - https://amzn.to/3idO37p
